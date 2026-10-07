@@ -53,12 +53,7 @@ const ICON={
   escudo:'<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   del:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>',
-  transf:'<path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/>',
-  relmes:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7M9 9h2"/>',
-  patrimonio:'<path d="M3 21h18M5 21V10M9.5 21V10M14.5 21V10M19 21V10M2.5 10L12 4l9.5 6z"/>',
-  reserva:'<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V6z"/><path d="M12 8v5M9.5 10.5h5"/>',
-  saldo:'<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 15h2M7 3l2 3M17 3l-2 3"/>'
+  plus:'<path d="M12 5v14M5 12h14"/>'
 };
 const svg=(k)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
 const VIEWS=[
@@ -103,7 +98,7 @@ let hojeD=new Date();
 let HOJE=`${hojeD.getFullYear()}-${pad(hojeD.getMonth()+1)}-${pad(hojeD.getDate())}`;
 let MES_ATUAL=HOJE.slice(0,7);
 let ANO_ATUAL=hojeD.getFullYear();
-function atualizarHoje(){hojeD=new Date();HOJE=`${hojeD.getFullYear()}-${pad(hojeD.getMonth()+1)}-${pad(hojeD.getDate())}`;MES_ATUAL=HOJE.slice(0,7);ANO_ATUAL=hojeD.getFullYear()}
+function atualizarHoje(){const anterior=MES_ATUAL;hojeD=new Date();HOJE=`${hojeD.getFullYear()}-${pad(hojeD.getMonth()+1)}-${pad(hojeD.getDate())}`;MES_ATUAL=HOJE.slice(0,7);ANO_ATUAL=hojeD.getFullYear();if(anterior!==MES_ATUAL)definirMesHistoricoCartoes(MES_ATUAL)}
 function dataValida(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const [y,m,d]=s.split('-').map(Number);return y>=1900&&y<=9999&&m>=1&&m<=12&&d>=1&&d<=ultimoDia(s.slice(0,7))}
 function mesValido(s){return /^\d{4}-(0[1-9]|1[0-2])$/.test(s)}
 function addMes(m,d){const [y,mm]=m.split('-').map(Number);const x=new Date(y,mm-1+d,1);return `${x.getFullYear()}-${pad(x.getMonth()+1)}`}
@@ -146,10 +141,26 @@ const plural=(n,s,p)=>n+' '+(n===1?s:p);
 /* ================= estado ================= */
 const CFG=window.CAIXA_CONFIG||{};
 let sb=null,canal=null,timer=null,gerando=false,instalarEvt=null;
-const S={tlN:(()=>{try{return Number(localStorage.getItem('pf-tl'))===6?6:12}catch(e){return 12}})(),fTag:'',ultima:{},mes:MES_ATUAL,ano:ANO_ATUAL,view:'geral',itens:[],movMetas:[],metas:[],contas:[],limites:{},mesadas:{},nomes:{},me:'',
+const S={fTag:'',ultima:{},mes:MES_ATUAL,ano:ANO_ATUAL,view:'geral',itens:[],movMetas:[],metas:[],contas:[],limites:{},mesadas:{},nomes:{},me:'',uid:'',workspace:'',
   ordDes:(()=>{try{return localStorage.getItem('pf-ord-des')||'prioridade'}catch(e){return 'prioridade'}})(),fCat:'',fOrd:(()=>{try{return localStorage.getItem('pf-ord')||'recente'}catch(e){return 'recente'}})(),fBusca:'',temV2:true,temV4:true,saldoInicial:0,movCaixa:0,base:[],cartoes:[],recorrentes:[],dividas:[],desejos:[],orc:{},
-  pagPrev:{},temV12:false,patrIni:'',temPatr:false,rendaMedia:0,temRenda:false,fut:[],card:[],fech:{},ccF:{cartao:'',mes:'',ano:''},pagDiv:[],invest:[],temV5:true,invAtivo:null,retro:{},calDia:null,abaDesejos:'aberto',sim:{nome:'',valor:'',forma:'vista',n:10},priv:false};
+  pagPrev:{},temV12:false,patrIni:'',temPatr:false,rendaMedia:0,temRenda:false,fut:[],card:[],fech:{},ccF:{cartao:'',mes:MES_ATUAL.slice(5,7),ano:MES_ATUAL.slice(0,4)},pagDiv:[],invest:[],temV5:true,invAtivo:null,retro:{},calDia:null,abaDesejos:'aberto',sim:{nome:'',valor:'',forma:'vista',n:10},priv:false};
 try{S.priv=localStorage.getItem('pf-priv')==='1'}catch(e){}
+
+/* Banco do geral: toda consulta e gravação carrega o workspace da sessão. */
+function workspaceAtual(){if(!S.workspace)throw new Error('Entre novamente para carregar seu espaço financeiro.');return S.workspace}
+function registroWorkspace(reg){
+  const workspace=workspaceAtual(),lista=Array.isArray(reg)?reg:[reg];
+  const itens=lista.map(r=>{if(r.workspace_id&&r.workspace_id!==workspace)throw new Error('O espaço financeiro mudou. Entre novamente antes de salvar.');return {...r,workspace_id:workspace}});
+  return Array.isArray(reg)?itens:itens[0];
+}
+function selecionarWorkspace(tabela,colunas='*'){return sb.from(tabela).select(colunas).eq('workspace_id',workspaceAtual())}
+function atualizarWorkspace(tabela,reg){return sb.from(tabela).update(registroWorkspace(reg)).eq('workspace_id',workspaceAtual())}
+function inserirWorkspace(tabela,reg){return sb.from(tabela).insert(registroWorkspace(reg))}
+function excluirWorkspace(tabela){return sb.from(tabela).delete().eq('workspace_id',workspaceAtual())}
+function upsertWorkspace(tabela,reg,opcoes={}){
+  const chave={config:'workspace_id,id',orcamentos:'workspace_id,mes',fechamentos:'workspace_id,mes'}[tabela];
+  return sb.from(tabela).upsert(registroWorkspace(reg),{...opcoes,...(chave?{onConflict:chave}:{})});
+}
 
 /* ================= carregamento ================= */
 function deLinha(r){return {id:r.id,tipo:r.tipo,valor:Number(r.valor),descricao:r.descricao||'',categoria:r.categoria,data:r.data,mes:r.data.slice(0,7),autor:r.autor_email,
@@ -165,9 +176,11 @@ function chavePedido(operacoes){
   return JSON.stringify(limpar(operacoes));
 }
 async function transacao(operacoes){
-  const assinatura=chavePedido(operacoes);let pendente=pedidosPendentes.get(assinatura);if(!pendente){pendente={pedido:uuid(),operacoes};pedidosPendentes.set(assinatura,pendente)}
+  const workspace=workspaceAtual();
+  operacoes=operacoes.map(o=>({...o,valores:registroWorkspace(o.valores||{}),onde:registroWorkspace(o.onde||{})}));
+  const assinatura=[S.uid,workspace,chavePedido(operacoes)].join('|');let pendente=pedidosPendentes.get(assinatura);if(!pendente){pendente={pedido:uuid(),operacoes};pedidosPendentes.set(assinatura,pendente)}
   const {data,error}=await sb.rpc('controle360_transacao',{p_pedido:pendente.pedido,p_operacoes:pendente.operacoes});
-  if(error){if(['PGRST202','42883'].includes(error.code))throw new Error('Execute schema-v13-checkup.sql no SQL Editor do Supabase antes de usar esta operação.');throw error}
+  if(error){if(['PGRST202','42883'].includes(error.code))throw new Error('Execute schema-v13-geral.sql no SQL Editor do Supabase antes de usar esta operação.');throw error}
   if(!Array.isArray(data))throw new Error('O servidor não confirmou a operação.');pedidosPendentes.delete(assinatura);return data;
 }
 async function inserirSeguro(tabela,reg){try{const resultado=await transacao((Array.isArray(reg)?reg:[reg]).map(x=>op(tabela,'insert',x,{},1)));return {data:resultado.flat(),error:null}}catch(error){return {data:null,error}}}
@@ -193,34 +206,33 @@ async function lerTodos(criar,chave='id'){
 function erroSchema(e){return !!e&&['42P01','42703','PGRST204','PGRST205'].includes(e.code)}
 function conferirLeitura(r,opcional=false){if(r.error&&!(opcional&&erroSchema(r.error)))throw r.error;return r}
 async function carregarItens(aplicar=true){
-  const usuario=S.me,alvo=S.mes,menor=S.mes<MES_ATUAL?S.mes:MES_ATUAL,maior=S.mes>MES_ATUAL?S.mes:addMes(MES_ATUAL,1);
+  const usuario=S.me,workspace=S.workspace,alvo=S.mes,menor=S.mes<MES_ATUAL?S.mes:MES_ATUAL,maior=S.mes>MES_ATUAL?S.mes:addMes(MES_ATUAL,1);
   const ini=addMes(menor,-5)+'-01',fim=addMes(maior,1)+'-01';
-  const {data,error}=conferirLeitura(await lerTodos(()=>sb.from('lancamentos').select('*').or(`and(data.gte.${ini},data.lt.${fim}),and(data_caixa.gte.${ini},data_caixa.lt.${fim}),and(status.eq.previsto,cartao_id.is.null,data.lt.${ini})`)));
-  if(alvo!==S.mes||usuario!==S.me)return;
+  const {data,error}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').or(`and(data.gte.${ini},data.lt.${fim}),and(data_caixa.gte.${ini},data_caixa.lt.${fim}),and(status.eq.previsto,cartao_id.is.null,data.lt.${ini})`)));
+  if(alvo!==S.mes||usuario!==S.me||workspace!==S.workspace)return;
   const itens=data.map(deLinha);if(aplicar)S.itens=itens;return {mes:alvo,itens};
 }
 async function carregarResto(aplicar=true){
   const destino=S,estado={};
-  const q=t=>sb.from(t);
   const ini3=addMes(MES_ATUAL,-3)+'-01',fimAt=addMes(MES_ATUAL,1)+'-01';
   const r=await Promise.all([
-    lerTodos(()=>q('metas').select('*').order('criado_em')),
-    q('config').select('*').eq('id','casal').maybeSingle(),
-    lerTodos(()=>q('lancamentos').select('meta_id,tipo,valor,data').in('tipo',['aporte','resgate']).not('meta_id','is',null).eq('status','pago').lte('data',HOJE)),
-    lerTodos(()=>q('lancamentos').select('id,tipo,valor,data_caixa').eq('status','pago').lte('data_caixa',HOJE)),
-    lerTodos(()=>q('lancamentos').select('tipo,valor,data,categoria,livre,status').in('status',['pago','comprometido']).gte('data',ini3).lt('data',fimAt)),
-    lerTodos(()=>q('cartoes').select('*').order('criado_em')),
-    lerTodos(()=>q('recorrentes').select('*').order('dia')),
-    lerTodos(()=>q('dividas').select('*').order('criado_em')),
-    lerTodos(()=>q('desejos').select('*').order('criado_em')),
-    lerTodos(()=>q('orcamentos').select('*'),'mes'),
-    lerTodos(()=>q('lancamentos').select('*').not('cartao_id','is',null)),
-    lerTodos(()=>q('lancamentos').select('divida_id,data,tipo').eq('tipo','divida').not('divida_id','is',null).eq('status','pago').lte('data',HOJE)),
-    lerTodos(()=>q('investimentos').select('*').order('data',{ascending:false})),
-    q('lancamentos').select('status,fatura_mes').limit(1),
-    lerTodos(()=>q('fechamentos').select('*'),'mes'),
-    q('lancamentos').select('tags').limit(1),
-    q('recorrentes').select('dono,fim').limit(1)
+    lerTodos(()=>selecionarWorkspace('metas','*').order('criado_em')),
+    selecionarWorkspace('config','*').eq('id','casal').maybeSingle(),
+    lerTodos(()=>selecionarWorkspace('lancamentos','meta_id,tipo,valor,data').in('tipo',['aporte','resgate']).not('meta_id','is',null).eq('status','pago').lte('data',HOJE)),
+    lerTodos(()=>selecionarWorkspace('lancamentos','id,tipo,valor,data_caixa').eq('status','pago').lte('data_caixa',HOJE)),
+    lerTodos(()=>selecionarWorkspace('lancamentos','tipo,valor,data,categoria,livre,status').in('status',['pago','comprometido']).gte('data',ini3).lt('data',fimAt)),
+    lerTodos(()=>selecionarWorkspace('cartoes','*').order('criado_em')),
+    lerTodos(()=>selecionarWorkspace('recorrentes','*').order('dia')),
+    lerTodos(()=>selecionarWorkspace('dividas','*').order('criado_em')),
+    lerTodos(()=>selecionarWorkspace('desejos','*').order('criado_em')),
+    lerTodos(()=>selecionarWorkspace('orcamentos','*'),'mes'),
+    lerTodos(()=>selecionarWorkspace('lancamentos','*').not('cartao_id','is',null)),
+    lerTodos(()=>selecionarWorkspace('lancamentos','divida_id,data,tipo').eq('tipo','divida').not('divida_id','is',null).eq('status','pago').lte('data',HOJE)),
+    lerTodos(()=>selecionarWorkspace('investimentos','*').order('data',{ascending:false})),
+    selecionarWorkspace('lancamentos','status,fatura_mes').limit(1),
+    lerTodos(()=>selecionarWorkspace('fechamentos','*'),'mes'),
+    selecionarWorkspace('lancamentos','tags').limit(1),
+    selecionarWorkspace('recorrentes','dono,fim').limit(1)
   ]);
   const [mt,cf,mv,tot,base,cc,rc,dv,ds,orc,card,pd,inv,v9,fc,v10,v11]=r;
   r.forEach((x,i)=>conferirLeitura(x,![1,2,3,4,10,11].includes(i)));
@@ -253,11 +265,11 @@ async function recarregar(){
   repetirCarga=true;if(cargaAtual)return cargaAtual;
   cargaAtual=(async()=>{
     try{do{
-      repetirCarga=false;atualizarHoje();const alvo=S.mes,usuario=S.me;
+      repetirCarga=false;atualizarHoje();const alvo=S.mes,usuario=S.me,workspace=S.workspace;
       const permitirMovimento=!!S._movCarregado;
       const carregar=async()=>{
         const [it,resto]=await Promise.all([carregarItens(false),carregarResto(false)]);
-        if(usuario!==S.me){repetirCarga=false;return false}if(alvo!==S.mes){repetirCarga=true;return false}
+        if(usuario!==S.me||workspace!==S.workspace){repetirCarga=false;return false}if(alvo!==S.mes){repetirCarga=true;return false}
         if(resto)Object.assign(S,resto);if(it)S.itens=it.itens;return true;
       };
       if(!await carregar())continue;
@@ -275,7 +287,7 @@ setInterval(()=>{if(S.me&&!document.hidden){const d=new Date(),hoje=`${d.getFull
 function assinar(){
   if(canal)return;
   canal=sb.channel('caixa');
-  ['lancamentos','config','metas','contas_fixas','cartoes','recorrentes','dividas','desejos','orcamentos','investimentos','fechamentos'].forEach(t=>canal.on('postgres_changes',{event:'*',schema:'public',table:t},agendar));
+  ['lancamentos','config','metas','contas_fixas','cartoes','recorrentes','dividas','desejos','orcamentos','investimentos','fechamentos'].forEach(t=>canal.on('postgres_changes',{event:'*',schema:'public',table:t,filter:'workspace_id=eq.'+workspaceAtual()},agendar));
   canal.subscribe();
   if(!S._visAssinada){S._visAssinada=true;document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.me)agendar()})}
 }
@@ -302,10 +314,10 @@ async function gerarOcorrencias(){
       novos.push(o);
     }
   }
-  if(novos.length){const {data,error}=await sb.from('lancamentos').upsert(novos,{onConflict:'recorrente_id,ref_mes',ignoreDuplicates:true}).select('id');if(error)throw error;if(data)n+=data.length}
+  if(novos.length){const {data,error}=await upsertWorkspace('lancamentos',novos,{onConflict:'recorrente_id,ref_mes',ignoreDuplicates:true}).select('id');if(error)throw error;if(data)n+=data.length}
   const autos=S.recorrentes.filter(r=>r.ativa&&r.auto);
   if(autos.length){
-    const {data}=conferirLeitura(await lerTodos(()=>sb.from('lancamentos').select('*').eq('status','previsto').in('recorrente_id',autos.map(r=>r.id)).lte('data',HOJE)));
+    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').eq('status','previsto').in('recorrente_id',autos.map(r=>r.id)).lte('data',HOJE)));
     const atualizar=data.filter(x=>{const r=autos.find(r=>r.id===x.recorrente_id),mes=x.ref_mes||x.data.slice(0,7);return r&&mes>=r.inicio&&(!r.fim||mes<=r.fim)}).map(x=>op('lancamentos','update',x.cartao_id?{status:'comprometido',data_caixa:null}:{status:'pago',data_caixa:x.data},{id:x.id,status:'previsto'}));
     // Blocos independentes: cada ocorrência é confirmada inteira e não duplica em outro aparelho.
     for(let k=0;k<atualizar.length;k+=500){const resultado=await transacao(atualizar.slice(k,k+500));n+=resultado.reduce((s,a)=>s+a.length,0)}
@@ -313,7 +325,7 @@ async function gerarOcorrencias(){
   /* cobranças recorrentes no cartão sempre seguem a regra do fechamento: corrige as que ficaram com datas antigas do cartão */
   for(const x of S.card.filter(x=>x.recorrente_id&&x.cartao_id&&x.status!=='pago'&&!x.editado)){
     const card=S.cartoes.find(c=>c.id===x.cartao_id);if(!card)continue;const certo=mesFatura(card,x.data);
-    if(x.fatura_mes!==certo){const {error}=await sb.from('lancamentos').update({fatura_mes:certo}).eq('id',x.id).eq('status',x.status).eq('editado',false);if(!error)n++}
+    if(x.fatura_mes!==certo){const {error}=await atualizarWorkspace('lancamentos',{fatura_mes:certo}).eq('id',x.id).eq('status',x.status).eq('editado',false);if(!error)n++}
   }
   return n;
 }
@@ -521,7 +533,7 @@ function navHTML(){
   htmlSeMudou($('privTop'),svg(S.priv?'olhoF':'olho'));
   document.body.classList.toggle('priv',S.priv);
 }
-function ir(v){v=ALIAS[v]||v;if(!VIEWS.some(x=>x.id===v))v='geral';S.view=v;S.ultima[grupoDe(v).id]=v;if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);render();window.scrollTo(0,0)}
+function ir(v){v=ALIAS[v]||v;if(!VIEWS.some(x=>x.id===v))v='geral';if(v==='cartoes')definirMesHistoricoCartoes();S.view=v;S.ultima[grupoDe(v).id]=v;if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);render();window.scrollTo(0,0)}
 function irGrupo(gid){const g=GRUPOS.find(x=>x.id===gid)||GRUPOS[0];ir(S.ultima[gid]||g.views[0])}
 function subAbas(){const g=grupoDe(S.view);if(g.views.length<2)return '';
   return `<div class="subabas" role="tablist" aria-label="${esc(g.nome)}"><span class="sub-g">${svg(g.ic)}${esc(g.nome)}</span>${g.views.map(id=>{const v=VIEWS.find(x=>x.id===id);return `<button role="tab" data-go="${id}" aria-selected="${S.view===id}">${esc(v.nome)}</button>`}).join('')}</div>`}
@@ -570,77 +582,6 @@ function linhasProjecao(sm){
   tl.forEach(e=>{saldo+=e.entra?e.valor:-e.valor;linhas.push({d:e.data,t:e.txt,k:e.k,v:e.entra?e.valor:-e.valor,s:saldo,ic:e.ic||e.em})});
   return linhas;
 }
-/* gráfico em linha do tempo: entradas, gastos e investimentos de agosto/2026 até dezembro do ano seguinte.
-   Meses passados = realizado; do mês atual em diante = realizado + previsto (contas, entradas e aportes já programados). */
-const LINHA_INICIO='2026-08';
-function projecaoMes(m){
-  const r=resumo(m);let e=r.entradas,g=r.gastos,i=r.investido,pi=0,prev=false;
-  if(m>=MES_ATUAL){
-    prev=true;
-    Object.values(eventosMes(m)).forEach(es=>es.forEach(x=>{
-      if(x.feito)return;const v=x.pend!=null?x.pend:x.valor;
-      if(x.transf){if((x.k||'').startsWith('Investimento · aporte')){i+=v;pi+=v}else if((x.k||'').startsWith('Investimento · resgate')){i-=v;pi-=v}return}
-      if(x.cartao||x.divida)return; // compras no cartão já entram pelo mês da compra
-      if(x.entra)e+=v;else if(x.sai)g+=v;
-    }));
-  }
-  return {m,e:cent(e),g:cent(g),i:cent(i),pi:cent(pi),prev};
-}
-function graficoLinhaTempo(){
-  const fim=(ANO_ATUAL+1)+'-12',ini=LINHA_INICIO<fim?LINHA_INICIO:addMes(MES_ATUAL,-2);
-  const ms=[];for(let m=ini;m<=fim;m=addMes(m,1))ms.push(m);
-  const n=ms.length,vw=(document.getElementById('view')||{}).clientWidth||900,W=Math.round(Math.min(1300,Math.max(300,vw-64))),H=W<500?190:170,pl=W<500?40:46,pr=14,pt=10,pb=24;
-  const d=ms.map(projecaoMes);
-  /* investimentos = valor da carteira no fim de cada mês (histórico real até hoje; depois, carteira atual + aportes programados) */
-  if(!S.hist&&typeof carregarHist==='function')carregarHist();
-  let acum=totalInvest();
-  d.forEach(x=>{if(x.m<MES_ATUAL)x.i=cent(S.hist?patrimonioEm(x.m).invest:acum);else{acum=cent(acum+x.pi);x.i=acum}});
-  const SER=[['e','Entradas','#16f27a'],['g','Gastos','#ff4560'],['i','Investimentos (carteira)','#ffd76a']];
-  const vals=d.flatMap(x=>[x.e,x.g,x.i]),mx=Math.max(1,...vals),mn=Math.min(0,...vals);
-  const passo=(()=>{const bruto=(mx-mn)/3,p=Math.pow(10,Math.floor(Math.log10(bruto||1))),f=bruto/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p})();
-  const topo=Math.ceil(mx/passo)*passo,base=Math.floor(mn/passo)*passo;
-  const X=i=>pl+(n===1?0:i*(W-pl-pr)/(n-1)),Y=v=>pt+(topo-v)/(topo-base||1)*(H-pt-pb),larg=(W-pl-pr)/Math.max(1,n-1);
-  const ia=Math.max(0,ms.indexOf(MES_ATUAL));
-  let grade='';for(let v=base;v<=topo+1e-6;v+=passo)grade+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" class="${v===0?'tl-zero':'tl-grade'}"/><text x="${pl-7}" y="${Y(v)+4}" text-anchor="end" class="tl-eixo">${KS(v)}</text>`;
-  const pulo=W<700?2:1;
-  const rot=d.map((x,i)=>{const mostra=i%pulo===0||x.m===MES_ATUAL||x.m.slice(5)==='01';if(!mostra)return '';const ano=(i===0||x.m.slice(5)==='01')?`<tspan class="tl-ano" x="${X(i)}" dy="11">${x.m.slice(0,4)}</tspan>`:'';
-    return `<text x="${X(i)}" y="${H-14}" text-anchor="middle" class="tl-eixo${x.m===MES_ATUAL?' atual':''}">${nomeMes(x.m,true)}${ano}</text>`}).join('');
-  const faixa=ia<n-1?`<rect class="tl-prev" x="${X(ia)}" y="${pt}" width="${X(n-1)-X(ia)}" height="${H-pt-pb}"/><text x="${X(n-1)}" y="${pt+10}" text-anchor="end" class="tl-prevl">previsão</text>`:'';
-  const pol=(k,cor,de,ate,tracejado)=>`<polyline class="tl-linha${tracejado?' tl-tr':''}" ${tracejado?'':'pathLength="1" '}fill="none" stroke="${cor}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points="${d.slice(de,ate+1).map((x,j)=>X(de+j)+','+Y(x[k])).join(' ')}"/>`;
-  const linhas=SER.map(([k,,cor])=>pol(k,cor,0,ia,false)+(ia<n-1?pol(k,cor,ia,n-1,true):'')).join('');
-  const pts=d.map((x,i)=>SER.map(([k,,cor])=>`<circle class="tl-pt${x.prev&&x.m>MES_ATUAL?' fut':''}" data-i="${i}" cx="${X(i)}" cy="${Y(x[k])}" r="${x.m===MES_ATUAL?3:2.1}" fill="${cor}" style="--c:${cor}"/>`).join('')).join('');
-  const hit=d.map((x,i)=>`<rect class="tl-hit" data-i="${i}" x="${X(i)-larg/2}" y="0" width="${larg}" height="${H}"/>`).join('');
-  const dados=JSON.stringify(d.map(x=>({t:nomeMes(x.m)+(x.m===MES_ATUAL?' · realizado + previsto':x.prev?' · previsto':''),v:SER.map(([k,nome,cor])=>[nome,cor,R(x[k])])}))).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-  const atual=d[ia];
-  return `<div class="panel tl-panel"><div class="panel-head"><div><h2>Linha do tempo</h2><p class="sub">${esc(nomeMes(ms[0]))} até ${esc(nomeMes(fim))} · do mês atual em diante, realizado + previsto</p></div></div>
-    <div class="tl-wrap" data-d="${dados}"><svg class="tl-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Gráfico em linha de entradas, gastos e investimentos por mês, com previsão até ${fim.slice(0,4)}">${faixa}${grade}${rot}<line class="tl-guia" y1="${pt}" y2="${H-pb}" x1="0" x2="0"/>${linhas}${pts}${hit}</svg><div class="tl-tip" hidden></div></div>
-    <div class="legend tl-leg">${SER.map(([k,nome,cor])=>`<span><i style="background:${cor}"></i>${nome} <b>${R0(atual[k])}</b></span>`).join('')}<span class="mut">valores de ${esc(soMes(MES_ATUAL))} (realizado + previsto)</span></div></div>`;
-}
-/* passar o mouse (ou tocar) no gráfico: guia, pontos em destaque e quadro com os valores do mês */
-(function(){
-  const fora=()=>{document.querySelectorAll('.tl-wrap.on').forEach(w=>{w.classList.remove('on');const t=w.querySelector('.tl-tip');if(t)t.hidden=true;w.querySelectorAll('.tl-pt.on').forEach(p=>p.classList.remove('on'))})};
-  const mover=e=>{
-    const h=e.target.closest&&e.target.closest('.tl-hit');
-    if(!h){fora();return}
-    const w=h.closest('.tl-wrap'),svg=w.querySelector('svg'),i=Number(h.dataset.i);
-    let D;try{D=JSON.parse(w.dataset.d)}catch(x){return}
-    const x=D[i];if(!x)return;
-    w.classList.add('on');
-    w.querySelectorAll('.tl-pt.on').forEach(p=>p.classList.remove('on'));
-    w.querySelectorAll(`.tl-pt[data-i="${i}"]`).forEach(p=>p.classList.add('on'));
-    const g=w.querySelector('.tl-guia'),cx=Number(h.getAttribute('x'))+Number(h.getAttribute('width'))/2;
-    g.setAttribute('x1',cx);g.setAttribute('x2',cx);
-    const tip=w.querySelector('.tl-tip');
-    tip.innerHTML=`<b>${x.t}</b>`+x.v.map(([n,c,v])=>`<span><i style="background:${c}"></i>${n}<em>${v}</em></span>`).join('');
-    tip.hidden=false;
-    const k=svg.getBoundingClientRect().width/Number(svg.getAttribute('width')),px=cx*k,tw=tip.offsetWidth;
-    tip.style.left=Math.max(4,Math.min(w.clientWidth-tw-4,px+14>w.clientWidth-tw-4?px-tw-14:px+14))+'px';
-    tip.style.top='6px';
-  };
-  document.addEventListener('pointermove',mover);
-  document.addEventListener('pointerdown',mover);
-  document.documentElement.addEventListener('pointerleave',fora);
-})();
 function vGeral(){
   const sm=situacaoMes(),r0=resumo(MES_ATUAL),mc=soMes(MES_ATUAL),pat=patrimonioLiquido();
   const fimMes=MES_ATUAL+'-'+pad(ultimoDia(MES_ATUAL));
@@ -670,7 +611,7 @@ function vGeral(){
   const proxHTML=prox.length?`<div class="mini">${prox.map(e=>`<div class="mini-row"><div class="em">${e.ic||e.em}</div><div class="nm"><b>${esc(e.txt)}</b><small>${e.data===HOJE?'Hoje':diasEntre(HOJE,e.data)===1?'Amanhã':dataBR(e.data)} · ${esc(e.k)}</small>${acaoEvento(e,'btn xs ev-acao')}</div><div class="vl ${e.entra?'pos':'neg'}">${e.entra?'+ ':'− '}${R(e.pend!=null?e.pend:e.valor)}</div></div>`).join('')}</div>`
     :vazio('Nada pela frente','Cadastrem as contas que se repetem (aluguel, internet, salário) para o site avisar antes de vencer.',BTN('cr-nova','Cadastrar conta'));
   const ult=[...r.ef].sort((a,b)=>b.data.localeCompare(a.data)||b.criadoEm-a.criadoEm).slice(0,5);
-  const aCartaoMes=soma(r0.ef.filter(i=>i.tipo==='gasto'&&i.cartao_id&&i.status==='comprometido')),saiuCx=cent(r0.gastos-aCartaoMes);
+  const aCartaoMes=soma(r0.ef.filter(i=>i.tipo==='gasto'&&i.cartao_id&&i.status==='comprometido'));
   /* det = qual detalhe abre ao tocar no número (de onde ele vem) */
   const kpi=(k,v,cls,sub,det)=>`<div class="kpi${det?' kpi-click':''}"${det?` data-act="kpi-det" data-k="${det}" role="button" tabindex="0" title="Ver de onde vem este número"`:''}><small>${k}</small><b class="${cls}">${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
   return head('Visão geral','A situação de vocês e o que precisam saber agora.',BTN('novo-global','Novo'),true)+retro+`
@@ -678,13 +619,13 @@ function vGeral(){
     <div class="hv3-main">
       <div class="kpis-top">
         ${kpi(`Em caixa ${selo(sm.caixa,{inl:1})}`,R(sm.caixa),cS(sm.caixa)+' kpi-xl',`<button class="lnk" data-act="ajustar-caixa">Ajustar saldo</button>`,'caixa')}
-        ${kpi('Entradas',R0(r0.entradas),r0.entradas>0?'pos':'zero','recebidas em '+esc(mc)+` · <button class="lnk" data-act="renda-media">${S.rendaMedia>0?'renda média '+R0(S.rendaMedia):'definir renda média'}</button>`,'entradas')}
+        ${kpi('Ainda a pagar',R0(sm.compromissos),sm.compromissos>0?'ref':'zero','tudo que ainda vai sair até o fim de '+esc(mc),'aPagar')}
         ${kpi(`Patrimônio líquido ${selo(pat.liquido,{inl:1})}`,R0(pat.liquido),cS(pat.liquido),'caixa + metas + investimentos − dívidas','patrimonio')}
       </div>
       <div class="kpis-bot">
-        ${kpi('Já saiu do caixa',R0(saiuCx),saiuCx>0?'neg':'zero','saiu da conta em '+esc(mc),'jaSaiu')}
-        ${kpi('Falta pagar',R0(sm.compromissos),sm.compromissos>0?'ref':'zero','tudo que ainda vai sair até o fim de '+esc(mc),'aPagar')}
-        ${kpi('Gasto total do mês',R0(r0.gastos),r0.gastos>0?'neg':'zero','em '+esc(mc)+(aCartaoMes>0?` · <span class="ref">${R0(aCartaoMes)}</span> no cartão a pagar`:''),'gastos')}
+        ${kpi('Entradas',R0(r0.entradas),r0.entradas>0?'pos':'zero','recebidas em '+esc(mc)+` · <button class="lnk" data-act="renda-media">${S.rendaMedia>0?'renda média '+R0(S.rendaMedia):'definir renda média'}</button>`,'entradas')}
+        ${kpi('Gastos realizados',R0(r0.gastos),r0.gastos>0?'neg':'zero','em '+esc(mc)+(aCartaoMes>0?` · <span class="ref">${R0(aCartaoMes)}</span> no cartão a pagar`:''),'gastos')}
+        ${kpi('Vence hoje / em atraso',R0(sm.aPagar),sm.aPagar>0?'neg':'zero',sm.aPagar>0?'pede pagamento agora':'nada vencido','vence')}
       </div>
       <p class="hv3-nota hv3-dica">Toque em um número para ver de onde ele vem · <button class="lnk" data-act="glossario">o que significa cada termo?</button></p>
       ${sm.sugestaoMetas>0?`<p class="hv3-nota">🎯 Sugestão para as metas neste mês: <b class="ref">${R0(sm.sugestaoMetas)}</b>. Só sai do caixa quando vocês registrarem "Guardar na meta".</p>`:''}
@@ -704,7 +645,7 @@ function vGeral(){
       <div class="chart">${chart}</div>
       <div class="legend"><span><i style="background:#16f27a"></i>Entradas</span><span><i style="background:var(--neg)"></i>Gastos</span></div></div>
     <div class="panel"><div class="panel-head"><div><h2>Últimos lançamentos</h2><p class="sub">${esc(nomeMes(S.mes))}</p></div><button class="lnk" data-go="gastos">Ver todos →</button></div>${ult.length?`<div class="mini">${ult.map(linhaMini).join('')}</div>`:vazio('Mês vazio','Nada lançado em '+esc(soMes(S.mes))+'.')}</div>
-  </div>${graficoLinhaTempo()}`;
+  </div>`;
 }
 /* ================= transferências ================= */
 function vTransf(){
@@ -937,6 +878,11 @@ function vCartoes(){
   </div>`;
 }
 /* histórico de todos os lançamentos dos cartões, por fatura */
+/* Cada abertura do histórico começa no mês/ano corrente; o cartão escolhido é preservado. */
+function definirMesHistoricoCartoes(mes){
+  const agora=new Date(),ref=mes||`${agora.getFullYear()}-${pad(agora.getMonth()+1)}`;
+  S.ccF={...S.ccF,mes:ref.slice(5,7),ano:ref.slice(0,4)};
+}
 function itensHistoricoCartoes(){
   const f=S.ccF;
   return S.card.filter(x=>{const ref=refDoItem(x);return (!f.cartao||x.cartao_id===f.cartao)&&(!f.ano||ref.slice(0,4)===f.ano)&&(!f.mes||ref.slice(5,7)===f.mes)});
@@ -985,6 +931,55 @@ function dadosOrcamento(){
     excesso:cent(entries.reduce((s,x)=>s+(x.estourado?-x.disp:0),0)),estourados:entries.filter(x=>x.estourado)};
 }
 function passaOrcFiltro(x,f){return f==='com'?x.lim>0:f==='sem'?x.lim===0:f==='estourados'?x.estourado:f==='comprometidos'?x.comprometido>.004:true}
+const ORC_CORES=['#60a5fa','#fbbf24','#34d399','#a78bfa','#fb7185','#38bdf8','#e879f9','#f97316','#2dd4bf','#c084fc','#facc15','#818cf8','#f472b6','#a3e635','#22d3ee','#d97706','#4ade80','#c4b5fd','#fda4af','#94a3b8','#67e8f9'];
+function dadosPizzaOrcamento(d=dadosOrcamento()){
+  const fatias=d.entries.filter(x=>Number.isFinite(x.lim)&&x.lim>0).map(x=>({
+    id:x.id,nome:x.nome,valor:x.lim,cor:ORC_CORES[x.id==='__livre'?20:CATS_G.findIndex(c=>c.id===x.id)]||'#94a3b8',
+    grupo:ORC_GRUPOS.find(g=>g.cats.includes(x.id))?.nome||'Outros'
+  })).sort((a,b)=>b.valor-a.valor||a.id.localeCompare(b.id));
+  const total=fatias.reduce((s,f)=>s+Math.round(f.valor*100),0)/100;
+  return {fatias,total};
+}
+function pizzaOrcamento(d){
+  const {fatias,total}=dadosPizzaOrcamento(d),pct=v=>(v/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+  return `<section class="panel orc-distribution" aria-labelledby="orcPieTitle" data-ak="orc-pizza">
+    <div class="orc-pie-head"><div><h2 id="orcPieTitle">Onde o dinheiro está orçado</h2><p class="sub">Distribuição dos limites de ${esc(nomeMes(S.mes))}. Passe sobre uma cor para ver os valores; clique para abrir os detalhes.</p></div><button class="btn sm ghost" data-orc-detail="planejado">Ver composição</button></div>
+    ${total>0?`<div class="orc-pie-layout"><div class="pie-box" id="orcPieBox">${pizzaSVG(fatias,total,{prefix:'orc-',label:'Distribuição do orçamento planejado por categoria',interactive:true})}<div class="pie-tip orc-pie-tip" id="orcPieTip" role="tooltip" hidden></div></div>
+    <div class="orc-pie-legend">${fatias.map((f,i)=>`<button type="button" class="leg-row" data-fatia="${i}" aria-label="Ver detalhes de ${esc(f.nome)}" aria-describedby="orcPieTip"><i style="background:${f.cor}" aria-hidden="true"></i><span>${esc(f.nome)}<small>${esc(f.grupo)}</small></span><b class="m">${S.priv?'R$ •••':R(f.valor)}</b><small>${pct(f.valor)}</small></button>`).join('')}
+    <div class="leg-row tot"><i aria-hidden="true"></i><span>Total orçado</span><b class="m">${S.priv?'R$ •••':R(total)}</b><small>100%</small></div></div></div>`:vazio('Nenhum valor orçado neste mês','Definam um limite nas categorias abaixo para ver a distribuição.')}
+    <p class="nota">A pizza mostra o planejamento completo do mês, incluindo dinheiro pessoal quando definido. Categorias sem limite ficam fora. Os filtros abaixo alteram apenas os cards; gastos realizados e compromissos não alteram as fatias.</p>
+  </section>`;
+}
+function conteudoPizzaOrcamento(f,total){
+  return `<div class="pt-h"><i style="background:${f.cor}"></i>${esc(f.nome)}</div><div class="pt-v">${S.priv?'R$ •••':R(f.valor)}</div><div class="pt-p">${(f.valor/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}% do orçamento · ${esc(f.grupo)}</div>`;
+}
+function ligarPizzaOrcamento(){
+  const panel=$('view').querySelector('.orc-distribution'),box=$('orcPieBox'),tip=$('orcPieTip');
+  if(!panel||!box||!tip)return;
+  const {fatias,total}=dadosPizzaOrcamento(),els=[...panel.querySelectorAll('[data-fatia]')];let ativo=null;
+  const ocultar=()=>{ativo=null;tip.hidden=true;box.classList.remove('ativo');els.forEach(el=>el.classList.remove('on'))};
+  const mostrar=(i,ev)=>{
+    const f=fatias[i];if(!f||!total)return;const mudou=ativo!==i;ativo=i;
+    els.forEach(el=>el.classList.toggle('on',Number(el.dataset.fatia)===i));box.classList.add('ativo');
+    if(mudou||tip.hidden)tip.innerHTML=conteudoPizzaOrcamento(f,total);tip.hidden=false;
+    const r=box.getBoundingClientRect(),t=tip.getBoundingClientRect();
+    const mx=ev&&Number.isFinite(ev.clientX)&&box.contains(ev.target)?ev.clientX:r.left+r.width/2;
+    const my=ev&&Number.isFinite(ev.clientY)&&box.contains(ev.target)?ev.clientY:r.top+r.height/2;
+    const x=Math.max(10,Math.min(mx-t.width/2,window.innerWidth-t.width-10));
+    let y=my-t.height-14;if(y<10)y=my+20;
+    tip.style.left=x+'px';tip.style.top=Math.max(10,Math.min(y,window.innerHeight-t.height-10))+'px';
+  };
+  els.forEach(el=>{
+    const i=Number(el.dataset.fatia),abrir=()=>{ocultar();modalCardDetalhe(detalheOrcamento(fatias[i].id))};
+    el.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')mostrar(i,e)});
+    el.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'&&ativo===i)mostrar(i,e)});
+    el.addEventListener('pointerleave',()=>{if(document.activeElement!==el)ocultar()});
+    el.addEventListener('focus',()=>mostrar(i));el.addEventListener('blur',ocultar);
+    el.addEventListener('click',e=>{e.stopPropagation();abrir()});
+    el.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();ocultar()}else if(el.tagName.toLowerCase()!=='button'&&['Enter',' '].includes(e.key)){e.preventDefault();e.stopPropagation();abrir()}});
+  });
+  $('view').addEventListener('click',e=>{if(!e.target.closest('.orc-distribution [data-fatia]'))ocultar()});
+}
 function vOrcamento(){
   const d=dadosOrcamento(),{pl,med,entPl}=d,f=ORC_FILTROS.some(x=>x[0]===S.orcFiltro)?S.orcFiltro:'todos';
   const card=x=>{
@@ -1018,6 +1013,7 @@ function vOrcamento(){
     ${d.comprometido>.004?`<button class="orc-alert commit" data-orc-filter="comprometidos"><i aria-hidden="true"></i><b>${R0(d.comprometido)}</b> comprometidos</button>`:''}
     ${d.disponivel>.004?`<button class="orc-alert available" data-orc-detail="disponivel"><i aria-hidden="true"></i><b>${R0(d.disponivel)}</b> ainda disponíveis</button>`:''}
   </div>
+  ${pizzaOrcamento(d)}
   <div class="orc-acoes"><span class="mut">${pl.proprio?'Orçamento próprio de '+esc(soMes(S.mes))+'.':'Usando o orçamento padrão.'}</span>
     <button class="btn sm ghost" data-act="renda-media">${med.definida?'Renda média: '+R0(S.rendaMedia):'Definir renda média'}</button>
     <button class="btn sm ghost" data-act="orc-copiar">Copiar do mês anterior</button><button class="btn sm ghost" data-act="orc-padrao">Usar como padrão</button></div>
@@ -1315,7 +1311,7 @@ function vLivre(){
 async function carregarRetro(ano){
   const versao=S._retroV||0;S._retroC=S._retroC||{};if(S._retroC[ano])return S._retroC[ano];
   const promessa=(async()=>{try{
-    const {data}=conferirLeitura(await lerTodos(()=>sb.from('lancamentos').select('*').gte('data',ano+'-01-01').lt('data',(Number(ano)+1)+'-01-01')));
+    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').gte('data',ano+'-01-01').lt('data',(Number(ano)+1)+'-01-01')));
     if(versao!==(S._retroV||0))return false;
     S.retro[ano]=data.filter(x=>x.status!=='previsto'&&x.status!=='cancelado').map(deLinha);if(S.view==='retro')render();return true;
   }catch(e){toast('Não deu para carregar o ano. Tente atualizar novamente.');return false}
@@ -1371,9 +1367,10 @@ function vRetro(){
 }
 
 /* ================= investimentos ================= */
-function pizzaSVG(fatias,total){
+function pizzaSVG(fatias,total,opts={}){
+  const prefix=opts.prefix||'',label=opts.label||'Divisão dos investimentos por tipo';
   const cx=170,cy=165,Rr=150,P=[];
-  const defs=fatias.map((f,i)=>`<radialGradient id="pg${i}" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="${Rr}" fx="${cx-35}" fy="${cy-45}"><stop offset="0" stop-color="${mixHex(f.cor,'#ffffff',.18)}"/><stop offset=".55" stop-color="${f.cor}"/><stop offset="1" stop-color="${mixHex(f.cor,'#000000',.18)}"/></radialGradient>`).join('');
+  const defs=fatias.map((f,i)=>`<radialGradient id="${prefix}pg${i}" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="${Rr}" fx="${cx-35}" fy="${cy-45}"><stop offset="0" stop-color="${mixHex(f.cor,'#ffffff',.18)}"/><stop offset=".55" stop-color="${f.cor}"/><stop offset="1" stop-color="${mixHex(f.cor,'#000000',.18)}"/></radialGradient>`).join('');
   let a0=-Math.PI/2;
   const geo=fatias.map(f=>{const ang=f.valor/total*Math.PI*2,a1=a0+ang,mid=a0+ang/2;const g={a0,a1,mid,ang};a0=a1;return g});
   const arco=(g,dy)=>{if(g.ang>=Math.PI*2-1e-6)return null;const x1=cx+Rr*Math.cos(g.a0),y1=cy+dy+Rr*Math.sin(g.a0),x2=cx+Rr*Math.cos(g.a1),y2=cy+dy+Rr*Math.sin(g.a1);
@@ -1382,12 +1379,12 @@ function pizzaSVG(fatias,total){
   // base com profundidade (o "relevo" lateral da pizza)
   const base=fatias.map((f,i)=>forma(geo[i],6,`fill="${mixHex(f.cor,'#000000',.3)}"`)).join('');
   const topo=fatias.map((f,i)=>{const g=geo[i],dx=(Math.cos(g.mid)*5).toFixed(1),dy=(Math.sin(g.mid)*5-2).toFixed(1);
-    return `<g class="fatia" data-fatia="${i}" style="--dx:${dx}px;--dy:${dy}px">${forma(g,6,`fill="${mixHex(f.cor,'#000000',.5)}"`)}${forma(g,0,`fill="url(#pg${i})" stroke="rgba(0,0,0,.45)" stroke-width="1.5" stroke-linejoin="round"`)}</g>`}).join('');
-  return `<svg viewBox="0 0 340 345" role="img" aria-label="Divisão dos investimentos por tipo"><defs>${defs}<filter id="pSombra" x="-20%" y="-20%" width="140%" height="150%"><feGaussianBlur stdDeviation="5"/></filter>
-    <radialGradient id="pBrilho" cx="35%" cy="25%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
-    <ellipse cx="${cx}" cy="${cy+26}" rx="${Rr*.95}" ry="${Rr*.9}" fill="#000" opacity=".25" filter="url(#pSombra)"/>
+    return `<g class="fatia" data-fatia="${i}"${opts.interactive?` tabindex="0" role="button" aria-label="Ver detalhes de ${esc(f.nome)}" aria-describedby="orcPieTip"`: ''} style="--dx:${dx}px;--dy:${dy}px">${forma(g,6,`fill="${mixHex(f.cor,'#000000',.5)}"`)}${forma(g,0,`fill="url(#${prefix}pg${i})" stroke="rgba(0,0,0,.45)" stroke-width="1.5" stroke-linejoin="round"`)}</g>`}).join('');
+  return `<svg viewBox="0 0 340 345" role="${opts.interactive?'group':'img'}" aria-label="${esc(label)}"><defs>${defs}<filter id="${prefix}pSombra" x="-20%" y="-20%" width="140%" height="150%"><feGaussianBlur stdDeviation="5"/></filter>
+    <radialGradient id="${prefix}pBrilho" cx="35%" cy="25%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="${cx}" cy="${cy+26}" rx="${Rr*.95}" ry="${Rr*.9}" fill="#000" opacity=".25" filter="url(#${prefix}pSombra)"/>
     <g>${base}</g><g>${topo}</g>
-    <circle cx="${cx}" cy="${cy}" r="${Rr}" fill="url(#pBrilho)" pointer-events="none"/></svg>`;
+    <circle cx="${cx}" cy="${cy}" r="${Rr}" fill="url(#${prefix}pBrilho)" pointer-events="none"/></svg>`;
 }
 function vInvestimentos(){
   if(!S.temV5)return head('Investimentos','',null,true)+`<div class="panel">${avisoV(5)}</div>`;
@@ -1541,9 +1538,9 @@ let filaOrc=Promise.resolve();
 function salvarOrc(mes=S.mes){
   S._orcPend=(S._orcPend||0)+1;S._orcPorMes=S._orcPorMes||{};S._orcPorMes[mes]=(S._orcPorMes[mes]||0)+1;
   S._orcVersao=S._orcVersao||{};const versao=S._orcVersao[mes]=(S._orcVersao[mes]||0)+1;
-  const snap=JSON.parse(JSON.stringify(S.orc[mes]));
+  const snap=JSON.parse(JSON.stringify(S.orc[mes])),workspace=workspaceAtual();
   filaOrc=filaOrc.catch(()=>{}).then(async()=>{try{
-    const {error}=await sb.from('orcamentos').upsert({mes,gastos:snap.gastos,entradas:snap.entradas||0,atualizado_em:new Date().toISOString()});
+    const {error}=await upsertWorkspace('orcamentos',{workspace_id:workspace,mes,gastos:snap.gastos,entradas:snap.entradas||0,atualizado_em:new Date().toISOString()});
     if(error)throw error;S._orcSalvo=S._orcSalvo||{};S._orcSalvo[mes]=snap;return true;
   }catch(e){
     if(S._orcVersao[mes]===versao){if(S._orcSalvo?.[mes])S.orc[mes]=JSON.parse(JSON.stringify(S._orcSalvo[mes]));else delete S.orc[mes];if(S.view==='orcamento')render()}
@@ -1583,9 +1580,9 @@ function ligarOrcamento(){
 async function carregarHist(){
   if(S._histC)return S._histProm;S._histC=true;const v0=S._histV=(S._histV||0)+1;
   S._histProm=(async()=>{try{
-    const {data}=conferirLeitura(await lerTodos(()=>sb.from('lancamentos').select('*')));
+    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*')));
     if(v0!==S._histV)return false;
-    S.hist=data.map(x=>({...x,valor:Number(x.valor)}));if(['relmes','patrimonio','geral'].includes(S.view))render();return true;
+    S.hist=data.map(x=>({...x,valor:Number(x.valor)}));if(['relmes','patrimonio'].includes(S.view))render();return true;
   }catch(e){toast('Não deu para carregar o histórico. Tente atualizar novamente.');return false}
   finally{if(v0===S._histV)S._histC=false}})();return S._histProm;
 }
@@ -1782,12 +1779,13 @@ function render(animarMovimento=false,reutilizar=false){
   navHTML();
   const V={relmes:vRelMes,patrimonio:vPatrimonio,transf:vTransf,geral:vGeral,calendario:vCalendario,gastos:vGastos,entradas:vEntradas,cartoes:vCartoes,orcamento:vOrcamento,contas:vContas,dividas:vDividas,metas:vMetas,desejos:vDesejos,reserva:vReserva,livre:vLivre,retro:vRetro,investimentos:vInvestimentos};
   if(S.temV9===false){limparSelects($('view'));$('view')._htmlFonte=null;$('view').innerHTML=`<div class="panel" style="max-width:640px;margin:40px auto">${vazio('Falta um passo para ativar a nova versão','Rodem o arquivo <b>schema-v9.sql</b> no SQL Editor do Supabase e recarreguem a página. Ele converte todos os lançamentos para o novo modelo, sem apagar nada.')}</div>`;return}
-  const root=$('view'),html=subAbas()+(V[S.view]||vGeral)(),chave=[S.view,S.mes,HOJE,S.me].join('|');
+  const root=$('view'),html=subAbas()+(V[S.view]||vGeral)(),chave=[S.view,S.mes,HOJE,S.me,S.workspace].join('|');
   if(reutilizar&&root._htmlFonte===html&&root._renderChave===chave)return;
   document.querySelectorAll('.dp-pop,.sel-pop').forEach(p=>{if(!p.closest('dialog'))p.remove()});limparSelects(root);
   root.innerHTML=html;root._htmlFonte=html;root._renderChave=chave;
   ligarOrcamento();
   ligarPizza();
+  ligarPizzaOrcamento();
   ligarBarras();
   ligarTabelas($('view'));
   ligarCardsDetalhes($('view'));
@@ -1983,7 +1981,7 @@ $('mdl').addEventListener('click',async e=>{
     try{if(b.dataset.m==='res-devolver')await transacao([
       op('lancamentos','insert',{tipo:'resgate',valor:g,descricao:'Resgate: '+m.nome,categoria:'meta',data:HOJE,meta_id:m.id,status:'pago'}, {},1),
       op('metas','update',S.temV10?{arquivada:true,reserva:false}:{reserva:false},{id:m.id},1)
-    ]);else{const r=await sb.from('metas').delete().eq('id',m.id);if(r.error)throw r.error}}catch(e){error=e}
+    ]);else{const r=await excluirWorkspace('metas').eq('id',m.id);if(r.error)throw r.error}}catch(e){error=e}
     b.disabled=false;if(error){$('mdl').querySelector('.erro').textContent='Não deu para remover: '+error.message;return}
     S._resExcluir=null;fechar();toast(b.dataset.m==='res-devolver'?'Valor devolvido ao caixa e reserva removida':'Reserva e histórico apagados');recarregar();return}
   if(b.dataset.m==='ir-cartao'){const o={valor:parseValor(val('mValor')),desc:val('mDesc'),cat:sel('cat'),data:val('mData'),livre:!!$('mdl').querySelector('#mLivre')?.checked};return modalCompraCartao(o)}
@@ -2027,8 +2025,8 @@ async function lerExtras(){
   if(!S.temV10)return {};
   const o={tags:parseTags(val('mTags')),nota:val('mNota').trim().slice(0,200)};
   const f=$('mdl').querySelector('#mAnexo')?.files?.[0];
-  if(f){if(anexosEnviados.has(f)){o.anexo=anexosEnviados.get(f);return o}if(f.size>10*1024*1024)throw new Error('O comprovante pode ter no máximo 10 MB.');
-    const nome=f.name.normalize('NFD').replace(/[^\w.\-]+/g,'_').slice(-60),path=`${uuid()}/${nome}`;
+  if(f){if(anexosEnviados.has(f)&&anexosEnviados.get(f).startsWith(workspaceAtual()+'/')){o.anexo=anexosEnviados.get(f);return o}if(f.size>10*1024*1024)throw new Error('O comprovante pode ter no máximo 10 MB.');
+    const workspace=workspaceAtual(),nome=f.name.normalize('NFD').replace(/[^\w.\-]+/g,'_').slice(-60),path=`${workspace}/${uuid()}/${nome}`;
     const {error}=await sb.storage.from('anexos').upload(path,f,{upsert:false,contentType:f.type||undefined});
     if(error)throw new Error('Não deu para enviar o comprovante: '+error.message);o.anexo=path;anexosEnviados.set(f,path)}
   return o;
@@ -2161,7 +2159,7 @@ function modalEditarLanc(item){
     if(item.cartao_id&&d!==item.data){const cd=S.cartoes.find(c=>c.id===item.cartao_id);if(cd&&item.fatura_mes===mesFatura(cd,item.data))up.fatura_mes=mesFatura(cd,d)}
     Object.assign(up,await lerExtras());
     if(item.investimento_id&&efetivo(item)){const mov=movimentoInvest(item,valor);up.principal_investido=mov.principal;await transacao([mov.operacao,op('lancamentos','update',up,{id:item.id,valor:item.valor,status:item.status},1)])}
-    else{const {error}=await sb.from('lancamentos').update(up).eq('id',item.id);if(error)throw error}toast('Lançamento atualizado');
+    else{const {error}=await atualizarWorkspace('lancamentos',up).eq('id',item.id);if(error)throw error}toast('Lançamento atualizado');
   });
 }
 /* "+ Novo": um só lugar para registrar qualquer fato financeiro */
@@ -2247,7 +2245,7 @@ function modalMeta(m){
     if(!nome)return 'Dê um nome para a meta.';if(!alvo)return 'Digite o valor que vocês querem juntar.';
     const prazo=val('mPrazo');if(prazo&&!dataValida(prazo))return 'Escolha um prazo válido.';const reg={nome,emoji:sel('emoji')||'🎯',alvo,prazo:prazo||null};
     if(S.temV4)reg.reserva=!!$('mdl').querySelector('#mRes')?.checked;
-    const {error}=m?await sb.from('metas').update(reg).eq('id',m.id):await inserirSeguro('metas',reg);
+    const {error}=m?await atualizarWorkspace('metas',reg).eq('id',m.id):await inserirSeguro('metas',reg);
     if(error)throw error;toast(m?'Meta atualizada':'Meta criada');
   });
 }
@@ -2267,7 +2265,7 @@ function modalAporte(m,tipo){
 }
 function modalExcluirReserva(m,g){
   if(g<=0){confirmar('Remover reserva de emergência?','A reserva sai da tela. O histórico de movimentações continua guardado; dá para criar uma nova reserva depois.','Remover reserva',
-    async()=>{const {error}=await sb.from('metas').update(S.temV10?{arquivada:true,reserva:false}:{reserva:false}).eq('id',m.id);if(error)throw error;toast('Reserva removida')});return}
+    async()=>{const {error}=await atualizarWorkspace('metas',S.temV10?{arquivada:true,reserva:false}:{reserva:false}).eq('id',m.id);if(error)throw error;toast('Reserva removida')});return}
   modal(`<h2>Remover reserva de emergência</h2><p class="mut" style="margin:-6px 0 16px">Há <b class="pos">${R(g)}</b> guardados na reserva. O que fazer com esse dinheiro?</p>
     <div class="novo-grid" style="grid-template-columns:1fr">
       <button class="novo-op" data-m="res-devolver"><span class="no-em">↩️</span><span><b>Devolver ${R0(g)} ao caixa e remover</b><small>Registra um resgate (o caixa sobe) e a reserva sai da tela. O histórico continua guardado.</small></span></button>
@@ -2377,7 +2375,7 @@ function modalPagPrev(card,fm){
   async()=>{const d=val('mData');
     if(d&&(!dataValida(d)||d<HOJE||d>f.venc))return 'Escolha uma data entre hoje e '+dataBR(f.venc)+'.';
     const novo={...S.pagPrev},k=card.id+'|'+fm;if(d)novo[k]=d;else delete novo[k];
-    const {error}=await sb.from('config').upsert({id:'casal',pag_previstos:novo,atualizado_em:new Date().toISOString()});if(error)throw error;
+    const {error}=await upsertWorkspace('config',{id:'casal',pag_previstos:novo,atualizado_em:new Date().toISOString()});if(error)throw error;
     S.pagPrev=novo;toast(d?'Pagamento previsto para '+dataBR(d):'Voltou para o vencimento');});
 }
 /* patrimônio inicial: desde quando os investimentos já cadastrados existiam (não é "ganho" do dia do cadastro) */
@@ -2388,7 +2386,7 @@ function modalPatrIni(){
     <p class="mut" style="font-size:13px;margin:-6px 0 14px">Use o dia em que vocês começaram a usar o site (por exemplo 01/09/2026). Deixe em branco para voltar a contar só a partir do cadastro.</p>${btns('Salvar')}`,
   async()=>{const d=val('mData');
     if(d&&(!dataValida(d)||d>HOJE))return 'Escolha uma data que já passou.';
-    const {error}=await sb.from('config').upsert({id:'casal',patr_inicial:d||null,atualizado_em:new Date().toISOString()});if(error)throw error;
+    const {error}=await upsertWorkspace('config',{id:'casal',patr_inicial:d||null,atualizado_em:new Date().toISOString()});if(error)throw error;
     S.patrIni=d;toast(d?'Patrimônio inicial definido':'Patrimônio inicial removido');});
 }
 /* renda média mensal: o app usa para orçamento, % da renda no cartão, simulador, dívidas e desejos */
@@ -2400,7 +2398,7 @@ function modalRendaMedia(){
     <p class="mut" style="font-size:13px;margin:-6px 0 14px">${hist>0?`Pelo histórico, a média dos últimos meses é ${R0(hist)}. `:''}Deixe em branco para o app usar a média do que entrou nos últimos meses. Isso não lança nenhuma entrada no caixa.</p>${btns('Salvar')}`,
   async()=>{const t=val('mValor').trim(),v=t?parseValor(t):null;
     if(t&&!v)return 'Digite um valor válido.';
-    const {error}=await sb.from('config').upsert({id:'casal',renda_media:v||null,atualizado_em:new Date().toISOString()});if(error)throw error;
+    const {error}=await upsertWorkspace('config',{id:'casal',renda_media:v||null,atualizado_em:new Date().toISOString()});if(error)throw error;
     S.rendaMedia=v||0;toast(v?'Renda média definida':'Voltou a usar a média dos últimos meses');});
 }
 /* detalhe completo de entradas e gastos (passado e futuro) */
@@ -2446,7 +2444,7 @@ function modalKpi(k){
   const atras=cent(sm.atrCartao+sm.atrContas);
   const aCartaoMes=soma(r0.ef.filter(i=>i.tipo==='gasto'&&i.cartao_id&&i.status==='comprometido'));
   let t='',def='',corpo='',go='',btnExtra='';
-  if(k==='aPagar'){t='Falta pagar';def='Tudo que já é obrigação de vocês e ainda não saiu do caixa até o fim de '+mc+'.';
+  if(k==='aPagar'){t='Ainda a pagar';def='Tudo que já é obrigação de vocês e ainda não saiu do caixa até o fim de '+mc+'.';
     corpo=grupo('Faturas de cartão',fat)+grupo('Contas e gastos agendados',ou)+grupo('Parcelas de dívida',dv)+(atras>0.004?lin('Atrasado de meses anteriores',R(atras),'neg'):'')+'<div class="sd-l tot"><span>Total</span><span><b class="ref">'+R(sm.compromissos)+'</b></span></div>';go='calendario'}
   else if(k==='vence'){t='Vence hoje / em atraso';def='A parte do "ainda a pagar" que já venceu ou vence hoje. É o que pede pagamento agora.';
     const ja=sai.filter(e=>e.data<=HOJE);
@@ -2456,7 +2454,7 @@ function modalKpi(k){
     btnExtra='<button class="btn ghost" data-act="ajustar-caixa">Ajustar saldo</button>'}
   else if(k==='patrimonio'){const pat=patrimonioLiquido();t='Patrimônio líquido';def='O que vocês têm: caixa, dinheiro em metas e investimentos, menos as dívidas cadastradas.';
     corpo=lin('Caixa',R(emCaixa()),cS(emCaixa()))+lin('Metas',R(totalMetas()))+lin('Investimentos',R(totalInvest()))+lin('Dívidas',pat.dividas>0?'− '+R(pat.dividas):R(0),pat.dividas>0?'neg':'zero')+'<div class="sd-l tot"><span>Patrimônio líquido</span><span><b class="'+cS(pat.liquido)+'">'+R(pat.liquido)+'</b></span></div>';go='patrimonio'}
-  else if(k==='gastos'){t='Gasto total do mês';def='Tudo que vocês gastaram em '+mc+', independentemente da forma de pagamento.';
+  else if(k==='gastos'){t='Gastos realizados';def='Tudo que vocês gastaram em '+mc+', independentemente da forma de pagamento.';
     corpo=lin('Já saíram do caixa',R(cent(r0.gastos-aCartaoMes)))+lin('No cartão, ainda a pagar',R(aCartaoMes),aCartaoMes>0?'ref':'zero')+'<div class="sd-l tot"><span>Total gasto</span><span><b class="neg">'+R(r0.gastos)+'</b></span></div>';go='gastos'}
   else if(k==='entradas'){t='Entradas';def='O que entrou em '+mc+' e o que ainda está previsto.';
     corpo=lin('Já recebido',R(r0.entradas),r0.entradas>0?'pos':'zero')+lin('Ainda a receber',R(sm.entra),sm.entra>0?'pos':'zero')+'<div class="sd-l tot"><span>Previsto no mês</span><span><b class="pos">'+R(cent(r0.entradas+sm.entra))+'</b></span></div>'+(S.rendaMedia>0?lin('Renda média definida',R(S.rendaMedia),'ref'):'');go='calendario'}
@@ -2500,7 +2498,7 @@ async function buscar(txt,meu,atual){
   const limpo=nq.replace(/[,().:%*\\"']/g,' ').replace(/\s+/g,' ').trim();
   const numTxt=/^[\d.,]+$/.test(nq)?normNum(nq):null,num=numTxt&&isFinite(Number(numTxt))&&Number(numTxt)>0?Number(numTxt):null;
   const cats=Object.entries(CAT).filter(([id,c])=>limpo&&(semAcento(c.nome).includes(limpo)||id===limpo)).map(([id])=>id);
-  let qr=sb.from('lancamentos').select('*').neq('status','cancelado').order('data',{ascending:false}).limit(80);
+  let qr=selecionarWorkspace('lancamentos','*').neq('status','cancelado').order('data',{ascending:false}).limit(80);
   if(mes!==null||ano!==null){const y=ano||ANO_ATUAL;
     if(mes!==null){const a=`${y}-${pad(mes)}-01`,b=mes===12?`${y+1}-01-01`:`${y}-${pad(mes+1)}-01`;qr=qr.gte('data',a).lt('data',b)}else qr=qr.gte('data',`${y}-01-01`).lt('data',`${y+1}-01-01`)}
   if(limpo){const f=[`descricao.ilike.%${limpo}%`];if(cats.length)f.push(`categoria.in.(${cats.join(',')})`);if(num!==null)f.push(`valor.eq.${num}`);qr=qr.or(f.join(','))}
@@ -2601,7 +2599,7 @@ function modalConta(c){
     const nome=val('mNome').trim(),valor=parseValor(val('mValor')),dia=Number(val('mDia'));
     if(!nome)return 'Dê um nome para a conta.';if(!valor)return 'Digite o valor da conta.';if(!(Number.isInteger(dia)&&dia>=1&&dia<=31))return 'O dia do vencimento vai de 1 a 31.';
     const reg={nome,valor,dia,categoria:sel('cat')||'contas'};if(c)reg.ativa=sel('ativa')!=='0';
-    const {error}=c?await sb.from('contas_fixas').update(reg).eq('id',c.id):await sb.from('contas_fixas').insert(reg);
+    const {error}=c?await atualizarWorkspace('contas_fixas',reg).eq('id',c.id):await inserirWorkspace('contas_fixas',reg);
     if(error)throw error;toast(c?'Conta atualizada':'Conta cadastrada');
   });
 }
@@ -2619,7 +2617,7 @@ function modalCartao(c){
     const nome=val('mNome').trim(),limite=val('mLim').trim()?parseLivre(val('mLim')):0,fechamento=Number(val('mFech')),vencimento=Number(val('mVenc'));
     if(!nome)return 'Dê um nome para o cartão.';if(limite===null||limite<0)return 'Digite um limite válido, maior ou igual a zero.';if(!(Number.isInteger(fechamento)&&fechamento>=1&&fechamento<=31))return 'O dia do fechamento vai de 1 a 31.';if(!(Number.isInteger(vencimento)&&vencimento>=1&&vencimento<=31))return 'O dia do vencimento vai de 1 a 31.';
     const reg={nome,limite:Math.max(0,limite),fechamento,vencimento,cor:sel('cor')||CORES_CARTAO[0]};
-    const {error}=c?await sb.from('cartoes').update(reg).eq('id',c.id):await sb.from('cartoes').insert(reg);
+    const {error}=c?await atualizarWorkspace('cartoes',reg).eq('id',c.id):await inserirWorkspace('cartoes',reg);
     if(error)throw error;toast(c?'Cartão atualizado':'Cartão cadastrado');
   });
   $('mdl').querySelector('[data-g="cor"]').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$('mdl').querySelectorAll('[data-g="cor"] button').forEach(x=>x.style.borderColor=x===b?'#fff':'transparent')});
@@ -2645,7 +2643,7 @@ function modalRecorrente(r){
     const reg={descricao,valor,dia,categoria:sel('cat'),auto:sel('como')==='auto',ativa:sel('ativa')!=='0'};
     if(r.tipo==='gasto'&&S.temV10){const meio=sel('meio')||'pix';reg.meio=meio;reg.cartao_id=meio==='credito'?(sel('cartao')||null):null;if(meio==='credito'&&!reg.cartao_id)return 'Escolham o cartão.'}
     if(S.temV11){if(sel('dono'))reg.dono=sel('dono');const rest=Number(val('mRest')||0);if(!Number.isInteger(rest)||rest<0||rest>120)return 'Informe de 1 a 120 cobranças, ou deixe em branco.';reg.fim=rest?addMes(proxCobranca(r),rest-1):null}
-    const {data:linhas}=conferirLeitura(await lerTodos(()=>sb.from('lancamentos').select('*').eq('recorrente_id',r.id).eq('status','previsto')));
+    const {data:linhas}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').eq('recorrente_id',r.id).eq('status','previsto')));
     const operacoes=[op('recorrentes','update',reg,{id:r.id,valor:r.valor,dia:r.dia},1)];
     for(const p of linhas){
       const mes=p.ref_mes||p.data.slice(0,7),d=diaNoMes(mes,dia);
@@ -2680,7 +2678,7 @@ function modalDivida(d){
     if(!(Number.isInteger(tot)&&tot>=1))return 'Informe o total de parcelas.';if(!Number.isInteger(pag)||pag<0||pag>tot)return 'As parcelas já pagas não podem passar do total.';
     const reg={nome,credor:val('mCred').trim(),parcela,dia,parcelas_total:tot,pagas_inicial:pag,juros:Math.max(0,jur)};
     if(S.temV10){const ex=await lerExtras();reg.nota=ex.nota||'';if(ex.anexo)reg.anexo=ex.anexo}
-    const {error}=d?await sb.from('dividas').update(reg).eq('id',d.id):await sb.from('dividas').insert(reg);
+    const {error}=d?await atualizarWorkspace('dividas',reg).eq('id',d.id):await inserirWorkspace('dividas',reg);
     if(error)throw error;toast(d?'Dívida atualizada':'Dívida cadastrada');
   });
 }
@@ -2698,7 +2696,7 @@ function modalDesejo(d){
     if(!nome)return 'Dê um nome para o desejo.';if(!valor)return 'Digite o valor estimado.';
     if(link&&!/^https?:\/\//.test(link))return 'O link precisa começar com http:// ou https://';
     const reg={nome,valor,emoji:sel('emoji')||'✨',prioridade:parseInt(sel('prio')||'2',10),link};
-    const {error}=d?await sb.from('desejos').update(reg).eq('id',d.id):await inserirSeguro('desejos',reg);
+    const {error}=d?await atualizarWorkspace('desejos',reg).eq('id',d.id):await inserirSeguro('desejos',reg);
     if(error)throw error;toast(d?'Desejo atualizado':'Desejo adicionado');
   });
 }
@@ -2796,7 +2794,7 @@ function modalCaixa(){
     ${btns('Salvar saldo')}`,
   async()=>{
     const v=parseLivre(val('mValor'));if(v===null)return 'Digite um valor, por exemplo 8.500,00.';
-    const {error}=await sb.from('config').upsert({id:'casal',saldo_inicial:Math.round((v-S.movCaixa)*100)/100,atualizado_em:new Date().toISOString()});
+    const {error}=await upsertWorkspace('config',{id:'casal',saldo_inicial:Math.round((v-S.movCaixa)*100)/100,atualizado_em:new Date().toISOString()});
     if(error){if(/saldo_inicial/.test(error.message||''))return 'Falta rodar o arquivo schema-v3.sql no Supabase para liberar o ajuste.';throw error}
     toast('Saldo em caixa atualizado');
   });
@@ -2809,17 +2807,17 @@ function modalMesadas(){
   async()=>{
     const novo={};let ok=true;$('mdl').querySelectorAll('[data-mes]').forEach(inp=>{if(!inp.value.trim())return;const v=parseValor(inp.value);if(!v)ok=false;else novo[inp.dataset.mes]=v});
     if(!ok)return 'Algum valor está inválido.';
-    const {error}=await sb.from('config').upsert({id:'casal',mesadas:novo,atualizado_em:new Date().toISOString()});
+    const {error}=await upsertWorkspace('config',{id:'casal',mesadas:novo,atualizado_em:new Date().toISOString()});
     if(error){if(/mesadas/.test(error.message||''))return 'Falta rodar o arquivo schema-v4.sql no Supabase.';throw error}
     toast('Valores salvos');
   });
 }
 /* ---------- menu "mais", exportar, instalar ---------- */
 function modalMais(){
-  modal(`<h2>Menu</h2>${GRUPOS.map(g=>`<div class="mais-g"><div class="side-title">${esc(g.nome)}</div><div class="mais">${g.views.map(id=>{const v=VIEWS.find(x=>x.id===id);return `<button data-go="${id}" ${S.view===id?'aria-current="page"':''}>${svg(ICON[id]?id:'geral')}${esc(v.nome)}</button>`}).join('')}</div></div>`).join('')}
+  modal(`<h2>Menu</h2>${GRUPOS.map(g=>`<div class="mais-g"><div class="side-title">${esc(g.nome)}</div><div class="mais">${g.views.map(id=>{const v=VIEWS.find(x=>x.id===id);return `<button data-go="${id}" ${S.view===id?'aria-current="page"':''}>${svg(id==='geral'?'geral':id==='reserva'?'metas':id==='contas'?'contas':id)}${esc(v.nome)}</button>`}).join('')}</div></div>`).join('')}
     <div class="side-title">Ferramentas</div>
     <div class="mais"><button data-act="priv">${svg(S.priv?'olhoF':'olho')}${S.priv?'Mostrar valores':'Esconder valores'}</button><button data-act="exportar">${svg('baixar')}Exportar</button>${standalone()?'':`<button data-act="instalar">${svg('instalar')}Instalar app</button>`}
-    <button data-act="seguranca">${svg('escudo')}Segurança</button><button data-act="ajustar-caixa">${svg('saldo')}Ajustar saldo</button><button data-act="sair">${svg('sair')}Sair</button></div>
+    <button data-act="seguranca">${svg('escudo')}Segurança</button><button data-act="ajustar-caixa">💵 Ajustar saldo</button><button data-act="sair">${svg('sair')}Sair</button></div>
     <div class="btns"><button class="btn ghost" data-m="cancelar">Fechar</button></div>`);
 }
 function modalExportar(){
@@ -2866,7 +2864,7 @@ function instalar(){
     :`<p>No <b>Android</b>, abra no Chrome, toque no menu <b>⋮</b> e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p><p>No <b>computador</b>, no Chrome ou no Edge, clique no ícone de instalar que aparece no canto direito da barra de endereço.</p>`);
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instalarEvt=e});
-const VERSAO='30';
+const VERSAO='33 Geral';
 if($('verLogin'))$('verLogin').textContent='Versão '+VERSAO;
 /* atualização automática: quando sai uma versão nova, o site se recarrega sozinho (espera fechar a janela aberta, se houver) */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
@@ -2876,7 +2874,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
 }
 
 /* ================= ações ================= */
-async function inserir(t,reg,msg){const {error}=await sb.from(t).insert(reg);if(error){toast('Não deu para salvar: '+error.message);return false}if(msg)toast(msg);recarregar();return true}
+async function inserir(t,reg,msg){const {error}=await inserirWorkspace(t,reg);if(error){toast('Não deu para salvar: '+error.message);return false}if(msg)toast(msg);recarregar();return true}
 document.addEventListener('click',async e=>{
   const gn=e.target.closest('[data-grupo-nav]');if(gn){const g=GRUPOS.find(x=>x.id===gn.dataset.grupoNav);S.abertos=S.abertos||{};
     S.abertos[g.id]=true;irGrupo(g.id);return}
@@ -2890,7 +2888,6 @@ document.addEventListener('click',async e=>{
     rec=S.recorrentes.find(r=>r.id===id),div=S.dividas.find(d=>d.id===id),des=S.desejos.find(d=>d.id===id);
   if(['duplicar','des-meta','des-reabrir','div-desfazer','item-mover','oc-pular','oc-reativar','oc-desfazer','fatura-desfazer','orc-copiar','orc-padrao'].includes(act))a.disabled=true;
   try{switch(act){
-    case 'tl-n':S.tlN=Number(a.dataset.n)===6?6:12;try{localStorage.setItem('pf-tl',S.tlN)}catch(x){}render();break;
     case 'mes-1':S.mes=addMes(S.mes,-1);await recarregar();break;
     case 'mes+1':S.mes=addMes(S.mes,1);await recarregar();break;
     case 'ano-1':S.ano--;render();break;
@@ -2898,7 +2895,7 @@ document.addEventListener('click',async e=>{
     case 'novo':modalLancamento(a.dataset.tipo||'gasto',null,{cat:a.dataset.cat,data:a.dataset.data,livre:a.dataset.livre==='1'});break;
     case 'editar':if(item)modalLancamento(null,item);break;
     case 'apagar':if(!item)break;
-      if(item.recorrente_id)confirmar('Pular este mês?',`${esc(descVis(item))} deixa de acontecer em ${esc(soMes(item.ref_mes||item.mes))}. A conta continua nos próximos meses.`,'Pular este mês',async()=>{const antes=item.status;const {error}=await sb.from('lancamentos').update({status:'cancelado'}).eq('id',id);if(error)throw error;toastDesfazer('Mês pulado',async()=>{const r=await sb.from('lancamentos').update({status:antes}).eq('id',id);if(r.error)throw r.error})});
+      if(item.recorrente_id)confirmar('Pular este mês?',`${esc(descVis(item))} deixa de acontecer em ${esc(soMes(item.ref_mes||item.mes))}. A conta continua nos próximos meses.`,'Pular este mês',async()=>{const antes=item.status;const {error}=await atualizarWorkspace('lancamentos',{status:'cancelado'}).eq('id',id);if(error)throw error;toastDesfazer('Mês pulado',async()=>{const r=await atualizarWorkspace('lancamentos',{status:antes}).eq('id',id);if(r.error)throw r.error})});
       else if(item.compra_id&&item.parcelas>1)confirmar('Apagar compra parcelada?',`${esc(item.descricao.replace(/\s\(\d+\/\d+\)$/,''))} tem ${item.parcelas} parcelas. Todas saem dos gastos, das faturas e das projeções.`,'Apagar compra inteira',async()=>{const [orig]=await transacao([op('lancamentos','delete',{}, {compra_id:item.compra_id})]);
         if(orig.length)toastDesfazer('Compra apagada',async()=>{await transacao(orig.map(x=>op('lancamentos','insert',x,{},1)))});else toast('Compra apagada')});
       else confirmar('Apagar lançamento?',`${esc(descVis(item))} de ${R(item.valor)} sai de todo o site para vocês dois.`,'Apagar',async()=>{
@@ -2914,31 +2911,31 @@ document.addEventListener('click',async e=>{
         ...(cd?{cartao_id:cd.id,fatura_mes:mesFatura(cd,HOJE),status:'comprometido',meio:'credito',compra_id:uuid(),parcela:1,parcelas:1}:{status:'pago'})};
       const [ins]=await transacao([op('lancamentos','insert',nova,{},1)]);a.disabled=false;
       if(HOJE.slice(0,7)!==S.mes){S.mes=HOJE.slice(0,7)}
-      toastDesfazer(`Duplicado para hoje · ${R(item.valor)}`,async()=>{const r=await sb.from('lancamentos').delete().in('id',(ins||[]).map(x=>x.id));if(r.error)throw r.error});break}
+      toastDesfazer(`Duplicado para hoje · ${R(item.valor)}`,async()=>{const r=await excluirWorkspace('lancamentos').in('id',(ins||[]).map(x=>x.id));if(r.error)throw r.error});break}
     case 'busca':modalBusca();break;
     case 'busca-ir':{const m=a.dataset.mes,v=a.dataset.v;fechar();S.mes=m;await recarregar();ir(v);break}
     case 'cal-dia':S.calDia=a.dataset.d;render();break;
     case 'meta-nova':modalMeta();break;
     case 'meta-editar':if(meta)modalMeta(meta);break;
-    case 'meta-apagar':if(meta)confirmar('Excluir meta?',`A meta ${esc(meta.nome)} e todo o histórico de dinheiro guardado nela serão apagados.`,'Excluir meta',async()=>{const {error}=await sb.from('metas').delete().eq('id',id);if(error)throw error;toast('Meta excluída')});break;
+    case 'meta-apagar':if(meta)confirmar('Excluir meta?',`A meta ${esc(meta.nome)} e todo o histórico de dinheiro guardado nela serão apagados.`,'Excluir meta',async()=>{const {error}=await excluirWorkspace('metas').eq('id',id);if(error)throw error;toast('Meta excluída')});break;
     case 'aporte':case 'resgate':if(meta)modalAporte(meta,act);break;
     case 'reserva-criar':modalReserva();break;
-    case 'reserva-ajustar':{const m=S.metas.find(x=>x.reserva),v=reservaIdeal();if(m&&v){const {error}=await sb.from('metas').update({alvo:v}).eq('id',m.id);if(error)toast('Não deu para atualizar.');else{toast('Alvo atualizado');recarregar()}}}break;
+    case 'reserva-ajustar':{const m=S.metas.find(x=>x.reserva),v=reservaIdeal();if(m&&v){const {error}=await atualizarWorkspace('metas',{alvo:v}).eq('id',m.id);if(error)toast('Não deu para atualizar.');else{toast('Alvo atualizado');recarregar()}}}break;
     case 'conta-nova':case 'cr-nova':case 'rec-novo':modalContaNova();break;
     case 'cartao-novo':modalCartao();break;
     case 'cartao-editar':if(cartao)modalCartao(cartao);break;
-    case 'cartao-apagar':if(cartao)confirmar('Excluir cartão?',`O cartão ${esc(cartao.nome)} será removido. As compras já lançadas continuam nos gastos.`,'Excluir cartão',async()=>{const {error}=await sb.from('cartoes').delete().eq('id',id);if(error)throw error;toast('Cartão excluído')});break;
+    case 'cartao-apagar':if(cartao)confirmar('Excluir cartão?',`O cartão ${esc(cartao.nome)} será removido. As compras já lançadas continuam nos gastos.`,'Excluir cartão',async()=>{const {error}=await excluirWorkspace('cartoes').eq('id',id);if(error)throw error;toast('Cartão excluído')});break;
     case 'rec-editar':if(rec)modalRecorrente(rec);break;
     case 'rec-apagar':if(rec)confirmar('Excluir conta?',`${esc(rec.descricao)} deixa de acontecer nos próximos meses. O que já foi confirmado continua no histórico.`,'Excluir',async()=>{await transacao([op('lancamentos','delete',{}, {recorrente_id:id,status:'previsto'}),op('recorrentes','delete',{}, {id},1)]);toast('Conta excluída')});break;
     case 'div-nova':modalDivida();break;
     case 'div-editar':if(div)modalDivida(div);break;
-    case 'div-apagar':if(div)confirmar('Excluir dívida?',`${esc(div.nome)} será removida. Os pagamentos já lançados continuam nos gastos.`,'Excluir',async()=>{const {error}=await sb.from('dividas').delete().eq('id',id);if(error)throw error;toast('Dívida excluída')});break;
+    case 'div-apagar':if(div)confirmar('Excluir dívida?',`${esc(div.nome)} será removida. Os pagamentos já lançados continuam nos gastos.`,'Excluir',async()=>{const {error}=await excluirWorkspace('dividas').eq('id',id);if(error)throw error;toast('Dívida excluída')});break;
     case 'div-pagar':if(div)modalPagarDivida(div);break;
-    case 'div-desfazer':if(div){a.disabled=true;const {error}=await sb.from('lancamentos').delete().eq('divida_id',div.id).in('tipo',['divida','gasto']).gte('data',S.mes+'-01').lt('data',addMes(S.mes,1)+'-01');
+    case 'div-desfazer':if(div){a.disabled=true;const {error}=await excluirWorkspace('lancamentos').eq('divida_id',div.id).in('tipo',['divida','gasto']).gte('data',S.mes+'-01').lt('data',addMes(S.mes,1)+'-01');
       if(error){toast('Não deu para desfazer.');a.disabled=false}else{toast('Pagamento desfeito');recarregar()}}break;
     case 'des-novo':modalDesejo();break;
     case 'des-editar':if(des)modalDesejo(des);break;
-    case 'des-apagar':if(des)confirmar('Excluir desejo?',`${esc(des.nome)} sai da lista.`,'Excluir',async()=>{const {error}=await sb.from('desejos').delete().eq('id',id);if(error)throw error;toast('Desejo excluído')});break;
+    case 'des-apagar':if(des)confirmar('Excluir desejo?',`${esc(des.nome)} sai da lista.`,'Excluir',async()=>{const {error}=await excluirWorkspace('desejos').eq('id',id);if(error)throw error;toast('Desejo excluído')});break;
     case 'des-aba':S.abaDesejos=a.dataset.v;render();break;
     case 'des-simular':if(des){S.sim={nome:des.nome,valor:fmtInput(des.valor),forma:'vista',n:10};render();window.scrollTo({top:0,behavior:'smooth'})}break;
     case 'des-meta':if(des){a.disabled=true;await transacao([
@@ -2946,12 +2943,12 @@ document.addEventListener('click',async e=>{
       op('desejos','update',{status:'meta'},{id:des.id,status:des.status},1)
     ]);toast('Virou meta! Vejam em Metas.');await recarregar()}break;
     case 'des-comprado':if(des)modalLancamento('gasto',null,{valor:des.valor,desc:des.nome,cat:'compras',operacoesDepois:[op('desejos','update',{status:'comprado'},{id:des.id,status:des.status},1)]});break;
-    case 'des-reabrir':if(des){const {error}=await sb.from('desejos').update({status:'aberto'}).eq('id',des.id);if(error)throw error;await recarregar()}break;
+    case 'des-reabrir':if(des){const {error}=await atualizarWorkspace('desejos',{status:'aberto'}).eq('id',des.id);if(error)throw error;await recarregar()}break;
     case 'orc-zerar':{const mes=S.mes,k=a.dataset.cat,pl=planejado(mes);if(!pl.gastos[k])break;const g={...pl.gastos};delete g[k];S.orc[mes]={gastos:g,entradas:pl.entradas||0};render();
       if(await salvarOrc(mes))toast((CAT[k]||{nome:''}).nome+': planejado zerado')}break;
-    case 'orc-padrao':{const p=planejado(S.mes);a.disabled=true;const {error}=await sb.from('config').upsert({id:'casal',limites:p.gastos,atualizado_em:new Date().toISOString()});a.disabled=false;
+    case 'orc-padrao':{const p=planejado(S.mes);a.disabled=true;const {error}=await upsertWorkspace('config',{id:'casal',limites:p.gastos,atualizado_em:new Date().toISOString()});a.disabled=false;
       if(error)toast('Não deu para salvar agora.');else{toast('Este orçamento virou o padrão dos próximos meses');recarregar()}}break;
-    case 'orc-copiar':{const p=planejado(addMes(S.mes,-1));a.disabled=true;const {error}=await sb.from('orcamentos').upsert({mes:S.mes,gastos:p.gastos,entradas:p.entradas||0,atualizado_em:new Date().toISOString()});a.disabled=false;
+    case 'orc-copiar':{const p=planejado(addMes(S.mes,-1));a.disabled=true;const {error}=await upsertWorkspace('orcamentos',{mes:S.mes,gastos:p.gastos,entradas:p.entradas||0,atualizado_em:new Date().toISOString()});a.disabled=false;
       if(error)toast(/orcamentos/.test(error.message||'')?'Falta rodar o schema-v4.sql no Supabase.':'Não deu para copiar agora.');else{toast('Orçamento copiado do mês anterior');recarregar()}}break;
     case 'inv-novo':modalInvest();break;
     case 'inv-editar':{const x=S.invest.find(i=>i.id===id);if(x)modalInvest(x)}break;
@@ -2975,7 +2972,7 @@ document.addEventListener('click',async e=>{
     case 'inv-aportar':case 'inv-resgatar':{const x=S.invest.find(i=>i.id===id);if(x)modalMovInvest(x,act==='inv-aportar'?'aporte':'resgate')}break;
     case 'oc-confirmar':if(item)modalConfirmarOc(item);break;
     case 'oc-editar':if(item)modalEditarLanc(item);break;
-    case 'oc-pular':case 'oc-reativar':case 'oc-desfazer':if(item){a.disabled=true;const {error}=await sb.from('lancamentos').update({status:act==='oc-pular'?'cancelado':'previsto'}).eq('id',id);
+    case 'oc-pular':case 'oc-reativar':case 'oc-desfazer':if(item){a.disabled=true;const {error}=await atualizarWorkspace('lancamentos',{status:act==='oc-pular'?'cancelado':'previsto'}).eq('id',id);
       if(error){toast('Não deu para alterar agora.');a.disabled=false}else{toast(act==='oc-pular'?'Mês pulado. Ela some desta tela; para rever, use “Mostrar contas fora do mês”.':act==='oc-desfazer'?'Confirmação desfeita':'Ocorrência reativada');recarregar()}}break;
     case 'ct-cat':S.ctF=S.ctF||{dono:'',cartao:'',cat:''};S.ctF.cat=a.dataset.v===S.ctF.cat?'':a.dataset.v;render();break;
     case 'ct-fora':S.ctF=S.ctF||{dono:'',cartao:'',cat:'',fora:false};S.ctF.fora=!S.ctF.fora;render();break;
@@ -2992,12 +2989,12 @@ document.addEventListener('click',async e=>{
     case 'fatura-prev':if(cartao)modalPagPrev(cartao,a.dataset.fm);break;
     case 'patr-ini':modalPatrIni();break;
     case 'renda-media':modalRendaMedia();break;
-    case 'kpi-det':(a.dataset.k==='entradas'||a.dataset.k==='gastos'||a.dataset.k==='jaSaiu')?modalFluxo(a.dataset.k):modalKpi(a.dataset.k);break;
+    case 'kpi-det':(a.dataset.k==='entradas'||a.dataset.k==='gastos')?modalFluxo(a.dataset.k):modalKpi(a.dataset.k);break;
     case 'det-fluxo':modalFluxo(a.dataset.k,true);break;
     case 'det-proj':modalProjecao();break;
     case 'det-edit':{const it=S.itens.find(x=>x.id===a.dataset.id);if(it)modalLancamento(null,it)}break;
     case 'glossario':modalGlossario();break;
-    case 'fatura-desfazer':if(cartao){const volta=a.closest('.fat-view')?{...S.fatView}:null;a.disabled=true;const {error}=await sb.from('lancamentos').update({status:'comprometido',data_caixa:null}).eq('cartao_id',cartao.id).eq('fatura_mes',a.dataset.fm).eq('status','pago');
+    case 'fatura-desfazer':if(cartao){const volta=a.closest('.fat-view')?{...S.fatView}:null;a.disabled=true;const {error}=await atualizarWorkspace('lancamentos',{status:'comprometido',data_caixa:null}).eq('cartao_id',cartao.id).eq('fatura_mes',a.dataset.fm).eq('status','pago');
       if(error){toast('Não deu para desfazer.');a.disabled=false}else{toast('Pagamento da fatura desfeito');await recarregar();if(volta)abrirFaturas(volta.cartao,volta.fm)}}break;
     case 'sim-comprar':{const v=parseValor(S.sim.valor);if(!v)break;if(S.sim.forma==='parc')modalCompraCartao({valor:v,desc:S.sim.nome,n:parseInt(S.sim.n,10)||2});else modalLancamento('gasto',null,{valor:v,desc:S.sim.nome,cat:'compras'})}break;
     case 'n-divida':modalEscolherDivida();break;
@@ -3008,11 +3005,11 @@ document.addEventListener('click',async e=>{
           const prox=addMes(m,1);if(!S.orc[prox]){const p=planejado(m);operacoes.push(op('orcamentos','upsert',{mes:prox,gastos:p.gastos,entradas:p.entradas||0,atualizado_em:new Date().toISOString()}, {},1))}
           await transacao(operacoes);
           toast(cap(soMes(m))+' fechado')})}break;
-    case 'reabrir-mes':confirmar('Reabrir '+soMes(S.mes)+'?','O resumo salvo no fechamento é descartado. Os lançamentos do mês não mudam.','Reabrir mês',async()=>{const {error}=await sb.from('fechamentos').delete().eq('mes',S.mes);if(error)throw error;toast('Mês reaberto')});break;
+    case 'reabrir-mes':confirmar('Reabrir '+soMes(S.mes)+'?','O resumo salvo no fechamento é descartado. Os lançamentos do mês não mudam.','Reabrir mês',async()=>{const {error}=await excluirWorkspace('fechamentos').eq('mes',S.mes);if(error)throw error;toast('Mês reaberto')});break;
     case 'reserva-excluir':{const m=S.metas.find(x=>x.reserva);if(!m)break;const g=guardadoMeta(m.id);modalExcluirReserva(m,g)}break;
     case 'mesadas':modalMesadas();break;
     case 'ajustar-caixa':modalCaixa();break;
-    case 'priv':S.priv=!S.priv;try{localStorage.setItem('pf-priv',S.priv?'1':'0')}catch(x){}navHTML();if($('dlg').open)modalMais();break;
+    case 'priv':S.priv=!S.priv;try{localStorage.setItem('pf-priv',S.priv?'1':'0')}catch(x){}navHTML();if(S.view==='orcamento')render();if($('dlg').open)modalMais();break;
     case 'mais':modalMais();break;
     case 'ir-retro':S.ano=hojeD.getMonth()===0?ANO_ATUAL-1:ANO_ATUAL;ir('retro');break;
     case 'exportar':modalExportar();break;
@@ -3023,7 +3020,7 @@ document.addEventListener('click',async e=>{
     case 'sair':await sair();break;
   }}catch(e){toast('Não deu para concluir: '+(e?.message||'tente novamente.'))}finally{a.disabled=false}
 });
-window.addEventListener('hashchange',()=>{let v=location.hash.slice(1);v=ALIAS[v]||v;if(VIEWS.some(x=>x.id===v)&&v!==S.view){S.view=v;S.ultima[grupoDe(v).id]=v;render()}});
+window.addEventListener('hashchange',()=>{let v=location.hash.slice(1);v=ALIAS[v]||v;if(VIEWS.some(x=>x.id===v)&&v!==S.view){if(v==='cartoes')definirMesHistoricoCartoes();S.view=v;S.ultima[grupoDe(v).id]=v;render()}});
 
 /* ================= login ================= */
 const URL_SITE=location.origin+location.pathname;
@@ -3072,11 +3069,22 @@ $('lCodigo').addEventListener('keydown',e=>{if(e.key==='Enter')verificarMfa()});
 $('lCodigo').addEventListener('input',()=>{if($('lCodigo').value.length===6)verificarMfa()});
 $('lVoltarMfa').addEventListener('click',()=>sair());
 async function entrar(sessao,geracao=geracaoAuth){
-  S.me=(sessao.user.email||'').toLowerCase();
-  const {data,error}=await sb.from('membros').select('email,nome');if(geracao!==geracaoAuth)return;
-  if(error)throw error;
-  if(!data||!data.length||!data.some(m=>m.email.toLowerCase()===S.me)){telaLogin('A conta '+S.me+' não está na lista de quem pode usar este site.',true);$('lSair').hidden=false;return}
-  S.nomes=Object.fromEntries(data.map(m=>[m.email.toLowerCase(),m.nome]));
+  S.me=(sessao.user.email||'').toLowerCase();S.uid=sessao.user.id;S.workspace='';
+  const perfilAtual=()=>sb.from('profiles').select('user_id,email,nome,current_workspace_id').eq('user_id',sessao.user.id).maybeSingle();
+  let perfil=await perfilAtual();if(geracao!==geracaoAuth)return;if(perfil.error)throw perfil.error;
+  // Perfis com workspace existente nunca passam pelo bootstrap: ele pode reativar membros removidos.
+  if(!perfil.data?.current_workspace_id){
+    const boot=await sb.rpc('bootstrap_current_user');if(geracao!==geracaoAuth)return;if(boot.error)throw boot.error;
+    perfil=await perfilAtual();if(geracao!==geracaoAuth)return;if(perfil.error)throw perfil.error;
+  }
+  const workspace=perfil.data?.current_workspace_id;if(!workspace)throw new Error('Não foi possível carregar seu espaço financeiro.');
+  const membros=await sb.from('workspace_members').select('user_id').eq('workspace_id',workspace).eq('status','active');
+  if(geracao!==geracaoAuth)return;if(membros.error)throw membros.error;
+  const ids=(membros.data||[]).map(m=>m.user_id);
+  if(!ids.includes(sessao.user.id)){telaLogin('Sua conta não tem acesso ativo a este espaço financeiro.',true);$('lSair').hidden=false;return}
+  const {data,error}=await sb.from('profiles').select('user_id,email,nome').in('user_id',ids);
+  if(geracao!==geracaoAuth)return;if(error)throw error;
+  S.workspace=workspace;S.nomes=Object.fromEntries((data||[]).map(m=>[m.email.toLowerCase(),m.nome]));
   $('whoName').textContent=S.nomes[S.me]||S.me.split('@')[0];if($('ver'))$('ver').textContent='Versão '+VERSAO;$('whoMail').textContent=S.me;
   if(standalone())$('instBtn').hidden=true;
   if(/access_token|type=/.test(location.hash))history.replaceState(null,'',location.pathname);
@@ -3140,7 +3148,7 @@ $('lSair').addEventListener('click',sair);
   sb=window.supabase.createClient(CFG.url.replace(/\/(rest|auth)\/v1\/?$/,'').replace(/\/$/,''),CFG.anonKey);
   sb.auth.onAuthStateChange((ev,s)=>{
     if(ev==='PASSWORD_RECOVERY'){recuperando=true;$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
-    if(ev==='SIGNED_OUT'){geracaoAuth++;clearTimeout(timer);S.me='';S.itens=[];S.card=[];S.cardTodos=[];S.metas=[];S.movMetas=[];S.cartoes=[];S.recorrentes=[];S.dividas=[];S.pagDiv=[];S.desejos=[];S.invest=[];S.hist=null;S._histV=(S._histV||0)+1;S.retro={};S._retroC={};S._retroV=(S._retroV||0)+1;S.saldoInicial=0;S.movCaixa=0;pedidosPendentes.clear();S._movCarregado=false;S._ultimaAssMov=undefined;if(canal){sb.removeChannel(canal);canal=null}fechar();$('view').innerHTML='';telaLogin();return}
+    if(ev==='SIGNED_OUT'){geracaoAuth++;clearTimeout(timer);S.me='';S.uid='';S.workspace='';S.itens=[];S.card=[];S.cardTodos=[];S.metas=[];S.movMetas=[];S.cartoes=[];S.recorrentes=[];S.dividas=[];S.pagDiv=[];S.desejos=[];S.invest=[];S.hist=null;S._histV=(S._histV||0)+1;S.retro={};S._retroC={};S._retroV=(S._retroV||0)+1;S.saldoInicial=0;S.movCaixa=0;pedidosPendentes.clear();S._movCarregado=false;S._ultimaAssMov=undefined;if(canal){sb.removeChannel(canal);canal=null}fechar();$('view').innerHTML='';telaLogin();return}
     if(ev==='SIGNED_IN'&&s&&!recuperando&&$('app').hidden&&$('lSair').hidden)setTimeout(()=>aposLogin(s),0);
   });
   const {data:{session}}=await sb.auth.getSession();
