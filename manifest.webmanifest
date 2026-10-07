@@ -1,7 +1,7 @@
 {
-  "name": "Controle 360",
-  "short_name": "Controle 360",
-  "description": "Controle financeiro pessoal, de casal ou familia, com caixa, gastos, cartoes, metas e investimentos.",
+  "name": "Controle 360 · Lucas e Yasmin",
+  "short_name": "Lucas e Yasmin",
+  "description": "Planejamento financeiro compartilhado de Lucas e Yasmin: caixa, orçamento, cartões, metas e investimentos.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
