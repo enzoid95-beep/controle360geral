@@ -161,7 +161,7 @@ function registroWorkspace(reg){
   const itens=lista.map(r=>{if(r.workspace_id&&r.workspace_id!==workspace)throw new Error('O espaço financeiro mudou. Entre novamente antes de salvar.');return {...r,workspace_id:workspace}});
   return Array.isArray(reg)?itens:itens[0];
 }
-function selecionarWorkspace(tabela,colunas='*'){return sb.from(tabela).select(colunas).eq('workspace_id',workspaceAtual())}
+function selecionarWorkspace(tabela,colunas='*',opcoes){return sb.from(tabela).select(colunas,opcoes).eq('workspace_id',workspaceAtual())}
 function atualizarWorkspace(tabela,reg){return sb.from(tabela).update(registroWorkspace(reg)).eq('workspace_id',workspaceAtual())}
 function inserirWorkspace(tabela,reg){return sb.from(tabela).insert(registroWorkspace(reg))}
 function excluirWorkspace(tabela){return sb.from(tabela).delete().eq('workspace_id',workspaceAtual())}
@@ -202,13 +202,16 @@ function movimentoInvest(item,valor,excluir=false){
   return {principal,operacao:op('investimentos','update',{valor:novo,aplicado},{id:x.id,valor:x.valor,aplicado:x.aplicado},1)};
 }
 async function lerTodos(criar,chave='id'){
-  const data=[];let inicio=0;
+  const data=[];let inicio=0,total=null;
   for(;;){
-    const r=await criar().order(chave,{ascending:true}).range(inicio,inicio+499);
+    // Conta somente na primeira página, respeitando limites menores do servidor.
+    const r=await criar(inicio===0?{count:'exact'}:undefined).order(chave,{ascending:true}).range(inicio,inicio+499);
     if(r.error)return {data:null,error:r.error};
     if(!Array.isArray(r.data))return {data:null,error:new Error('Resposta de dados inválida.')};
     if(!r.data.length)return {data,error:null};
+    if(inicio===0&&Number.isSafeInteger(r.count)&&r.count>=r.data.length)total=r.count;
     data.push(...r.data);inicio+=r.data.length;
+    if(total!==null&&inicio>=total)return {data,error:null};
   }
 }
 function erroSchema(e){return !!e&&['42P01','42703','PGRST204','PGRST205'].includes(e.code)}
@@ -216,7 +219,7 @@ function conferirLeitura(r,opcional=false){if(r.error&&!(opcional&&erroSchema(r.
 async function carregarItens(aplicar=true){
   const usuario=S.me,workspace=S.workspace,alvo=S.mes,menor=S.mes<MES_ATUAL?S.mes:MES_ATUAL,maior=S.mes>MES_ATUAL?S.mes:addMes(MES_ATUAL,1);
   const ini=addMes(menor,-5)+'-01',fim=addMes(maior,1)+'-01';
-  const {data,error}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').or(`and(data.gte.${ini},data.lt.${fim}),and(data_caixa.gte.${ini},data_caixa.lt.${fim}),and(status.eq.previsto,cartao_id.is.null,data.lt.${ini})`)));
+  const {data,error}=conferirLeitura(await lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem).or(`and(data.gte.${ini},data.lt.${fim}),and(data_caixa.gte.${ini},data_caixa.lt.${fim}),and(status.eq.previsto,cartao_id.is.null,data.lt.${ini})`)));
   if(alvo!==S.mes||usuario!==S.me||workspace!==S.workspace)return;
   const itens=data.map(deLinha);if(aplicar)S.itens=itens;return {mes:alvo,itens};
 }
@@ -224,21 +227,21 @@ async function carregarResto(aplicar=true){
   const destino=S,estado={};
   const ini3=addMes(MES_ATUAL,-3)+'-01',fimAt=addMes(MES_ATUAL,1)+'-01';
   const r=await Promise.all([
-    lerTodos(()=>selecionarWorkspace('metas','*').order('criado_em')),
+    lerTodos((contagem)=>selecionarWorkspace('metas','*',contagem).order('criado_em')),
     selecionarWorkspace('config','*').eq('id','casal').maybeSingle(),
-    lerTodos(()=>selecionarWorkspace('lancamentos','meta_id,tipo,valor,data').in('tipo',['aporte','resgate']).not('meta_id','is',null).eq('status','pago').lte('data',HOJE)),
-    lerTodos(()=>selecionarWorkspace('lancamentos','id,tipo,valor,data_caixa').eq('status','pago').lte('data_caixa',HOJE)),
-    lerTodos(()=>selecionarWorkspace('lancamentos','tipo,valor,data,categoria,livre,status').in('status',['pago','comprometido']).gte('data',ini3).lt('data',fimAt)),
-    lerTodos(()=>selecionarWorkspace('cartoes','*').order('criado_em')),
-    lerTodos(()=>selecionarWorkspace('recorrentes','*').order('dia')),
-    lerTodos(()=>selecionarWorkspace('dividas','*').order('criado_em')),
-    lerTodos(()=>selecionarWorkspace('desejos','*').order('criado_em')),
-    lerTodos(()=>selecionarWorkspace('orcamentos','*'),'mes'),
-    lerTodos(()=>selecionarWorkspace('lancamentos','*').not('cartao_id','is',null)),
-    lerTodos(()=>selecionarWorkspace('lancamentos','divida_id,data,tipo').eq('tipo','divida').not('divida_id','is',null).eq('status','pago').lte('data',HOJE)),
-    lerTodos(()=>selecionarWorkspace('investimentos','*').order('data',{ascending:false})),
+    lerTodos((contagem)=>selecionarWorkspace('lancamentos','meta_id,tipo,valor,data',contagem).in('tipo',['aporte','resgate']).not('meta_id','is',null).eq('status','pago').lte('data',HOJE)),
+    lerTodos((contagem)=>selecionarWorkspace('lancamentos','id,tipo,valor,data_caixa',contagem).eq('status','pago').lte('data_caixa',HOJE)),
+    lerTodos((contagem)=>selecionarWorkspace('lancamentos','tipo,valor,data,categoria,livre,status',contagem).in('status',['pago','comprometido']).gte('data',ini3).lt('data',fimAt)),
+    lerTodos((contagem)=>selecionarWorkspace('cartoes','*',contagem).order('criado_em')),
+    lerTodos((contagem)=>selecionarWorkspace('recorrentes','*',contagem).order('dia')),
+    lerTodos((contagem)=>selecionarWorkspace('dividas','*',contagem).order('criado_em')),
+    lerTodos((contagem)=>selecionarWorkspace('desejos','*',contagem).order('criado_em')),
+    lerTodos((contagem)=>selecionarWorkspace('orcamentos','*',contagem),'mes'),
+    lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem).not('cartao_id','is',null)),
+    lerTodos((contagem)=>selecionarWorkspace('lancamentos','divida_id,data,tipo',contagem).eq('tipo','divida').not('divida_id','is',null).eq('status','pago').lte('data',HOJE)),
+    lerTodos((contagem)=>selecionarWorkspace('investimentos','*',contagem).order('data',{ascending:false})),
     selecionarWorkspace('lancamentos','status,fatura_mes').limit(1),
-    lerTodos(()=>selecionarWorkspace('fechamentos','*'),'mes'),
+    lerTodos((contagem)=>selecionarWorkspace('fechamentos','*',contagem),'mes'),
     selecionarWorkspace('lancamentos','tags').limit(1),
     selecionarWorkspace('recorrentes','dono,fim').limit(1)
   ]);
@@ -325,7 +328,7 @@ async function gerarOcorrencias(){
   if(novos.length){const {data,error}=await upsertWorkspace('lancamentos',novos,{onConflict:'recorrente_id,ref_mes',ignoreDuplicates:true}).select('id');if(error)throw error;if(data)n+=data.length}
   const autos=S.recorrentes.filter(r=>r.ativa&&r.auto);
   if(autos.length){
-    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').eq('status','previsto').in('recorrente_id',autos.map(r=>r.id)).lte('data',HOJE)));
+    const {data}=conferirLeitura(await lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem).eq('status','previsto').in('recorrente_id',autos.map(r=>r.id)).lte('data',HOJE)));
     const atualizar=data.filter(x=>{const r=autos.find(r=>r.id===x.recorrente_id),mes=x.ref_mes||x.data.slice(0,7);return r&&mes>=r.inicio&&(!r.fim||mes<=r.fim)}).map(x=>op('lancamentos','update',x.cartao_id?{status:'comprometido',data_caixa:null}:{status:'pago',data_caixa:x.data},{id:x.id,status:'previsto'}));
     // Blocos independentes: cada ocorrência é confirmada inteira e não duplica em outro aparelho.
     for(let k=0;k<atualizar.length;k+=500){const resultado=await transacao(atualizar.slice(k,k+500));n+=resultado.reduce((s,a)=>s+a.length,0)}
@@ -1318,7 +1321,7 @@ function vLivre(){
 async function carregarRetro(ano){
   const versao=S._retroV||0;S._retroC=S._retroC||{};if(S._retroC[ano])return S._retroC[ano];
   const promessa=(async()=>{try{
-    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').gte('data',ano+'-01-01').lt('data',(Number(ano)+1)+'-01-01')));
+    const {data}=conferirLeitura(await lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem).gte('data',ano+'-01-01').lt('data',(Number(ano)+1)+'-01-01')));
     if(versao!==(S._retroV||0))return false;
     S.retro[ano]=data.filter(x=>x.status!=='previsto'&&x.status!=='cancelado').map(deLinha);if(S.view==='retro')render();return true;
   }catch(e){toast('Não deu para carregar o ano. Tente atualizar novamente.');return false}
@@ -1587,7 +1590,7 @@ function ligarOrcamento(){
 async function carregarHist(){
   if(S._histC)return S._histProm;S._histC=true;const v0=S._histV=(S._histV||0)+1;
   S._histProm=(async()=>{try{
-    const {data}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*')));
+    const {data}=conferirLeitura(await lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem)));
     if(v0!==S._histV)return false;
     S.hist=data.map(x=>({...x,valor:Number(x.valor)}));if(['relmes','patrimonio'].includes(S.view))render();return true;
   }catch(e){toast('Não deu para carregar o histórico. Tente atualizar novamente.');return false}
@@ -2650,7 +2653,7 @@ function modalRecorrente(r){
     const reg={descricao,valor,dia,categoria:sel('cat'),auto:sel('como')==='auto',ativa:sel('ativa')!=='0'};
     if(r.tipo==='gasto'&&S.temV10){const meio=sel('meio')||'pix';reg.meio=meio;reg.cartao_id=meio==='credito'?(sel('cartao')||null):null;if(meio==='credito'&&!reg.cartao_id)return 'Escolham o cartão.'}
     if(S.temV11){if(sel('dono'))reg.dono=sel('dono');const rest=Number(val('mRest')||0);if(!Number.isInteger(rest)||rest<0||rest>120)return 'Informe de 1 a 120 cobranças, ou deixe em branco.';reg.fim=rest?addMes(proxCobranca(r),rest-1):null}
-    const {data:linhas}=conferirLeitura(await lerTodos(()=>selecionarWorkspace('lancamentos','*').eq('recorrente_id',r.id).eq('status','previsto')));
+    const {data:linhas}=conferirLeitura(await lerTodos((contagem)=>selecionarWorkspace('lancamentos','*',contagem).eq('recorrente_id',r.id).eq('status','previsto')));
     const operacoes=[op('recorrentes','update',reg,{id:r.id,valor:r.valor,dia:r.dia},1)];
     for(const p of linhas){
       const mes=p.ref_mes||p.data.slice(0,7),d=diaNoMes(mes,dia);
@@ -2871,7 +2874,7 @@ function instalar(){
     :`<p>No <b>Android</b>, abra no Chrome, toque no menu <b>⋮</b> e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p><p>No <b>computador</b>, no Chrome ou no Edge, clique no ícone de instalar que aparece no canto direito da barra de endereço.</p>`);
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instalarEvt=e});
-const VERSAO='35 · Lucas e Yasmin';
+const VERSAO='36 · Lucas e Yasmin';
 if($('verLogin'))$('verLogin').textContent='Versão '+VERSAO;
 if($('avLucas'))$('avLucas').innerHTML=AVATARES.lucas;
 if($('avYasmin'))$('avYasmin').innerHTML=AVATARES.yasmin;
@@ -3050,7 +3053,7 @@ let recuperando=/type=recovery/.test(location.hash+location.search);
 function msgLogin(t,erro){const m=$('lMsg');m.textContent=t||'';m.classList.toggle('erro-l',!!erro)}
 const MODOS_LOGIN=['lForm','lReset','lNova','lMfa'];
 function modoLogin(m){MODOS_LOGIN.forEach(id=>$(id).hidden=id!==m);msgLogin('')}
-function telaLogin(msg,semForm){$('app').hidden=true;$('login').hidden=false;modoLogin(semForm?'':'lForm');if(semForm)MODOS_LOGIN.forEach(id=>$(id).hidden=true);msgLogin(msg||'',!!semForm)}
+function telaLogin(msg,semForm){for(const id of ['lGoogle','lEntrar','lEsqueci'])$(id).disabled=!sb;$('app').hidden=true;$('login').hidden=false;modoLogin(semForm?'':'lForm');if(semForm)MODOS_LOGIN.forEach(id=>$(id).hidden=true);msgLogin(msg||'',!!semForm)}
 function erroPT(e){const m=(e&&e.message)||'';
   if(/invalid totp|totp code|invalid.*(mfa|code)/i.test(m))return 'Código incorreto ou vencido. Use o código atual do aplicativo (ele muda a cada 30 segundos) e confira se a hora do celular está automática.';
   if(/enabled|not.*support/i.test(m)&&/mfa|factor|totp/i.test(m))return 'A verificação em 2 etapas está desligada no Supabase. Ative em Authentication > Multi-Factor.';
@@ -3167,14 +3170,15 @@ async function sair(){fechar();try{const {error}=await sb.auth.signOut();if(erro
 $('lSair').addEventListener('click',sair);
 
 (async()=>{
-  if(!window.supabase||!CFG.url||!CFG.anonKey||CFG.url.includes('COLE_AQUI')){telaLogin('Falta configurar o arquivo config.js com o endereço e a chave do Supabase.',true);return}
+  if(!window.supabase){telaLogin('O arquivo supabase.js não foi carregado. Confira os arquivos publicados neste repositório.',true);return}
+  if(!CFG.url||!CFG.anonKey||CFG.url.includes('COLE_AQUI')){telaLogin('Falta configurar o arquivo config.js com o endereço e a chave do Supabase.',true);return}
   sb=window.supabase.createClient(CFG.url.replace(/\/(rest|auth)\/v1\/?$/,'').replace(/\/$/,''),CFG.anonKey);
   sb.auth.onAuthStateChange((ev,s)=>{
     if(ev==='PASSWORD_RECOVERY'){if(!emailPermitido(s?.user?.email)){recusarConta();return}recuperando=true;$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
     if(ev==='SIGNED_OUT'){geracaoAuth++;entrando=false;uidEntrando='';clearTimeout(timer);limparDadosEspaco();S.me='';S.uid='';S.workspace='';if(canal){sb.removeChannel(canal);canal=null}fechar();$('view').innerHTML='';$('lSair').hidden=true;telaLogin();return}
     if(ev==='SIGNED_IN'&&s&&!recuperando&&(($('app').hidden&&$('lSair').hidden)||(S.uid&&S.uid!==s.user.id)))setTimeout(()=>aposLogin(s),0);
   });
-  const {data:{session}}=await sb.auth.getSession();
+  const {data:inicio,error:erroInicial}=await sb.auth.getSession();if(erroInicial)throw erroInicial;const session=inicio?.session;
   if(recuperando&&session){if(!emailPermitido(session.user?.email)){recusarConta();return}$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
   const erroUrl=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1)).get('error_description');
   if(session)aposLogin(session);else telaLogin(erroUrl?'Não deu para entrar: '+erroUrl.replace(/\+/g,' '):'');
