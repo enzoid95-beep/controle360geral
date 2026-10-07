@@ -77,8 +77,15 @@ const GRUPOS=[
 ];
 const grupoDe=v=>GRUPOS.find(g=>g.views.includes(v))||GRUPOS[0];
 const ALIAS={limites:'orcamento',recorrentes:'contas'};
-const AVATARES={enzo:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24.5 44h15v22h-15z" fill="#9c5f3b"/><path d="M24.5 46c2.5 2.2 12.5 2.2 15 0v3c-3 2-12 2-15 0z" fill="#86502f"/><ellipse cx="17" cy="33" rx="3.2" ry="4.6" fill="#b5764c"/><ellipse cx="47" cy="33" rx="3.2" ry="4.6" fill="#b5764c"/><ellipse cx="32" cy="31" rx="15" ry="17.5" fill="#b9794f"/><path d="M17 30C15.5 16 23.5 10 32 10s16.5 6 15 20c-1.2-6-3.8-9.2-8.5-10.4-4.8 1.8-13 2-18.3.6C18.6 22.4 17.6 25.6 17 30z" fill="#16120f"/><path d="M22.4 26.6q3.6-2.2 7.2-.3M34.4 26.3q3.6-1.9 7.2.3" stroke="#16120f" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="26" cy="31.2" rx="1.9" ry="2.3" fill="#24150e"/><ellipse cx="38" cy="31.2" rx="1.9" ry="2.3" fill="#24150e"/><path d="M32 32.5q-2.2 4.6.2 5.8" stroke="#8a5032" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M26 41.4c2.6-1.7 9.4-1.7 12 0-1.4.7-3.4.5-6 .5s-4.6.2-6-.5z" fill="#16120f"/><path d="M26.1 41.7c-.3 2.4.6 4.4 2.3 5.6M37.9 41.7c.3 2.4-.6 4.4-2.3 5.6" stroke="#16120f" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M28.6 43.4q3.4 2.2 6.8 0" stroke="#fff" stroke-width="1.2" fill="#f4efe9" stroke-linecap="round"/><path d="M28.6 43.4q3.4 2.6 6.8 0" stroke="#6b3220" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M28.6 47c1.1 2 2 3 3.4 3s2.3-1 3.4-3c-2 1-4.8 1-6.8 0z" fill="#16120f"/></svg>',mariana:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 31C13 15 22 9 32 9s19 6 18 22l1 21c0 4-3.6 6.2-7 5.6H20c-3.4.6-7-1.6-7-5.6z" fill="#d9a63c"/><path d="M25.5 44h13v22h-13z" fill="#ecc4a8"/><path d="M25.5 46c2.4 2 10.6 2 13 0v3c-3 1.8-10 1.8-13 0z" fill="#dfb194"/><ellipse cx="32" cy="31" rx="14" ry="16.5" fill="#f8dbc6"/><path d="M18 31C16.6 17 25 12 33 12c9 0 14.4 6 13.6 17.6-2.6-6-6.6-9.8-12.8-10.8-3 4-9.6 8-15.8 12.2z" fill="#f3c95e"/><path d="M18.2 28.5c-2 10-1.2 20 3 28H15.8c-3.4-9-2.6-19.6 2.4-28zM46.2 27.6c2 10.4 1.2 20.6-3 28.9h5.4c3.4-9.2 2.6-20-2.4-28.9z" fill="#f3c95e"/><path d="M23.4 27q3.4-1.8 6.6-.2M34.2 26.8q3.4-1.6 6.6.2" stroke="#b8893a" stroke-width="1.7" fill="none" stroke-linecap="round"/><ellipse cx="26.6" cy="31.6" rx="1.8" ry="2.2" fill="#3b2a20"/><ellipse cx="37.4" cy="31.6" rx="1.8" ry="2.2" fill="#3b2a20"/><path d="M24.4 29.6l-1.2-1M39.6 29.6l1.2-1" stroke="#3b2a20" stroke-width="1.1" stroke-linecap="round"/><circle cx="23.6" cy="37" r="2.4" fill="#f2a29a" opacity=".45"/><circle cx="40.4" cy="37" r="2.4" fill="#f2a29a" opacity=".45"/><path d="M32 33q-1.6 3.4.4 4.2" stroke="#d9a58c" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M28.4 41.2q3.6 2.8 7.2 0" stroke="#d0686a" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>'};
-const AVATARES_TRISTES={enzo:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24.5 44h15v22h-15z" fill="#9c5f3b"/><path d="M24.5 46c2.5 2.2 12.5 2.2 15 0v3c-3 2-12 2-15 0z" fill="#86502f"/><ellipse cx="17" cy="33" rx="3.2" ry="4.6" fill="#b5764c"/><ellipse cx="47" cy="33" rx="3.2" ry="4.6" fill="#b5764c"/><ellipse cx="32" cy="31" rx="15" ry="17.5" fill="#b9794f"/><path d="M17 30C15.5 16 23.5 10 32 10s16.5 6 15 20c-1.2-6-3.8-9.2-8.5-10.4-4.8 1.8-13 2-18.3.6C18.6 22.4 17.6 25.6 17 30z" fill="#16120f"/><path d="M22.4 27.4q3.8-.6 7.2-2.6M34.4 24.8q3.4 2 7.2 2.6" stroke="#16120f" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="26" cy="31.2" rx="1.9" ry="2.3" fill="#24150e"/><ellipse cx="38" cy="31.2" rx="1.9" ry="2.3" fill="#24150e"/><path d="M32 32.5q-2.2 4.6.2 5.8" stroke="#8a5032" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M26 41.4c2.6-1.7 9.4-1.7 12 0-1.4.7-3.4.5-6 .5s-4.6.2-6-.5z" fill="#16120f"/><path d="M26.1 41.7c-.3 2.4.6 4.4 2.3 5.6M37.9 41.7c.3 2.4-.6 4.4-2.3 5.6" stroke="#16120f" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M29 45.2q3-2.6 6 0" stroke="#6b3220" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M28.6 47c1.1 2 2 3 3.4 3s2.3-1 3.4-3c-2 1-4.8 1-6.8 0z" fill="#16120f"/></svg>',mariana:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 31C13 15 22 9 32 9s19 6 18 22l1 21c0 4-3.6 6.2-7 5.6H20c-3.4.6-7-1.6-7-5.6z" fill="#d9a63c"/><path d="M25.5 44h13v22h-13z" fill="#ecc4a8"/><path d="M25.5 46c2.4 2 10.6 2 13 0v3c-3 1.8-10 1.8-13 0z" fill="#dfb194"/><ellipse cx="32" cy="31" rx="14" ry="16.5" fill="#f8dbc6"/><path d="M18 31C16.6 17 25 12 33 12c9 0 14.4 6 13.6 17.6-2.6-6-6.6-9.8-12.8-10.8-3 4-9.6 8-15.8 12.2z" fill="#f3c95e"/><path d="M18.2 28.5c-2 10-1.2 20 3 28H15.8c-3.4-9-2.6-19.6 2.4-28zM46.2 27.6c2 10.4 1.2 20.6-3 28.9h5.4c3.4-9.2 2.6-20-2.4-28.9z" fill="#f3c95e"/><path d="M23.4 27.6q3.4-.6 6.6-2.4M34.2 25.2q3.2 1.8 6.6 2.4" stroke="#b8893a" stroke-width="1.7" fill="none" stroke-linecap="round"/><ellipse cx="26.6" cy="31.6" rx="1.8" ry="2.2" fill="#3b2a20"/><ellipse cx="37.4" cy="31.6" rx="1.8" ry="2.2" fill="#3b2a20"/><path d="M24.4 29.6l-1.2-1M39.6 29.6l1.2-1" stroke="#3b2a20" stroke-width="1.1" stroke-linecap="round"/><circle cx="23.6" cy="37" r="2.4" fill="#f2a29a" opacity=".45"/><circle cx="40.4" cy="37" r="2.4" fill="#f2a29a" opacity=".45"/><path d="M32 33q-1.6 3.4.4 4.2" stroke="#d9a58c" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M28.8 43.4q3.2-2.8 6.4 0" stroke="#d0686a" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>'};
+const AVATARES={"lucas":"<svg viewBox=\"0 0 64 64\" aria-hidden=\"true\"><path d=\"M9 66v-6c1-8 10-10 15-10l8 5 8-5c7 0 15 3 15 10v6z\" fill=\"#294d78\"/><path d=\"M24.5 44h15v22h-15z\" fill=\"#dfb293\"/><path d=\"M24.5 46c2.5 2.2 12.5 2.2 15 0v3c-3 2-12 2-15 0z\" fill=\"#c89579\"/><ellipse cx=\"17\" cy=\"33\" rx=\"3.2\" ry=\"4.6\" fill=\"#e5bc9d\"/><ellipse cx=\"47\" cy=\"33\" rx=\"3.2\" ry=\"4.6\" fill=\"#e5bc9d\"/><ellipse cx=\"32\" cy=\"31\" rx=\"15\" ry=\"17.5\" fill=\"#edc8ad\"/><path d=\"M17 30C15.5 16 23.5 10 32 10s16.5 6 15 20c-1.2-6-3.8-9.2-8.5-10.4-4.8 1.8-13 2-18.3.6C18.6 22.4 17.6 25.6 17 30z\" fill=\"#151313\"/><path d=\"M22.4 26.6q3.6-2.2 7.2-.3M34.4 26.3q3.6-1.9 7.2.3\" stroke=\"#151313\" stroke-width=\"2.2\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"26\" cy=\"31.2\" rx=\"1.9\" ry=\"2.3\" fill=\"#24150e\"/><ellipse cx=\"38\" cy=\"31.2\" rx=\"1.9\" ry=\"2.3\" fill=\"#24150e\"/><path d=\"M32 32.5q-2.2 4.6.2 5.8\" stroke=\"#c18b6b\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M26 41.4c2.6-1.7 9.4-1.7 12 0-1.4.7-3.4.5-6 .5s-4.6.2-6-.5z\" fill=\"#151313\"/><path d=\"M26.1 41.7c-.3 2.4.6 4.4 2.3 5.6M37.9 41.7c.3 2.4-.6 4.4-2.3 5.6\" stroke=\"#151313\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M28.6 43.4q3.4 2.2 6.8 0\" stroke=\"#fff\" stroke-width=\"1.2\" fill=\"#f4efe9\" stroke-linecap=\"round\"/><path d=\"M28.6 43.4q3.4 2.6 6.8 0\" stroke=\"#6b3220\" stroke-width=\"1.3\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M28.6 47c1.1 2 2 3 3.4 3s2.3-1 3.4-3c-2 1-4.8 1-6.8 0z\" fill=\"#151313\"/></svg>","yasmin":"<svg viewBox=\"0 0 64 64\" aria-hidden=\"true\"><path d=\"M14 31C13 15 22 9 32 9s19 6 18 22l2 33H12z\" fill=\"#302018\"/><path d=\"M16 66v-7c1-6 7-9 11-9l5 4 5-4c6 0 11 5 12 9v7z\" fill=\"#8b4562\"/><path d=\"M25.5 44h13v22h-13z\" fill=\"#c99a79\"/><path d=\"M25.5 46c2.4 2 10.6 2 13 0v3c-3 1.8-10 1.8-13 0z\" fill=\"#b88566\"/><ellipse cx=\"32\" cy=\"31\" rx=\"14\" ry=\"16.5\" fill=\"#d9ac8c\"/><path d=\"M18 31C16.6 17 25 12 33 12c9 0 14.4 6 13.6 17.6-2.6-6-6.6-9.8-12.8-10.8-3 4-9.6 8-15.8 12.2z\" fill=\"#3b261f\"/><path d=\"M18.2 28.5c-2 10-1.2 25 3 36H13.8c-3.4-11-1-26.6 4.4-36zM46.2 27.6c2 10.4 1.2 26.6-3 36.4h7.4c3.4-11.2.6-28-4.4-36.4z\" fill=\"#3b261f\"/><path d=\"M23.4 27q3.4-1.8 6.6-.2M34.2 26.8q3.4-1.6 6.6.2\" stroke=\"#302018\" stroke-width=\"1.7\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"26.6\" cy=\"31.6\" rx=\"1.8\" ry=\"2.2\" fill=\"#3b2a20\"/><ellipse cx=\"37.4\" cy=\"31.6\" rx=\"1.8\" ry=\"2.2\" fill=\"#3b2a20\"/><path d=\"M24.4 29.6l-1.2-1M39.6 29.6l1.2-1\" stroke=\"#3b2a20\" stroke-width=\"1.1\" stroke-linecap=\"round\"/><circle cx=\"23.6\" cy=\"37\" r=\"2.4\" fill=\"#f2a29a\" opacity=\".45\"/><circle cx=\"40.4\" cy=\"37\" r=\"2.4\" fill=\"#f2a29a\" opacity=\".45\"/><path d=\"M32 33q-1.6 3.4.4 4.2\" stroke=\"#b88162\" stroke-width=\"1.3\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M28.4 41.2q3.6 2.8 7.2 0\" stroke=\"#d0686a\" stroke-width=\"1.9\" fill=\"none\" stroke-linecap=\"round\"/></svg>"};
+const AVATARES_TRISTES={"lucas":"<svg viewBox=\"0 0 64 64\" aria-hidden=\"true\"><path d=\"M9 66v-6c1-8 10-10 15-10l8 5 8-5c7 0 15 3 15 10v6z\" fill=\"#294d78\"/><path d=\"M24.5 44h15v22h-15z\" fill=\"#dfb293\"/><path d=\"M24.5 46c2.5 2.2 12.5 2.2 15 0v3c-3 2-12 2-15 0z\" fill=\"#c89579\"/><ellipse cx=\"17\" cy=\"33\" rx=\"3.2\" ry=\"4.6\" fill=\"#e5bc9d\"/><ellipse cx=\"47\" cy=\"33\" rx=\"3.2\" ry=\"4.6\" fill=\"#e5bc9d\"/><ellipse cx=\"32\" cy=\"31\" rx=\"15\" ry=\"17.5\" fill=\"#edc8ad\"/><path d=\"M17 30C15.5 16 23.5 10 32 10s16.5 6 15 20c-1.2-6-3.8-9.2-8.5-10.4-4.8 1.8-13 2-18.3.6C18.6 22.4 17.6 25.6 17 30z\" fill=\"#151313\"/><path d=\"M22.4 27.4q3.8-.6 7.2-2.6M34.4 24.8q3.4 2 7.2 2.6\" stroke=\"#151313\" stroke-width=\"2.2\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"26\" cy=\"31.2\" rx=\"1.9\" ry=\"2.3\" fill=\"#24150e\"/><ellipse cx=\"38\" cy=\"31.2\" rx=\"1.9\" ry=\"2.3\" fill=\"#24150e\"/><path d=\"M32 32.5q-2.2 4.6.2 5.8\" stroke=\"#c18b6b\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M26 41.4c2.6-1.7 9.4-1.7 12 0-1.4.7-3.4.5-6 .5s-4.6.2-6-.5z\" fill=\"#151313\"/><path d=\"M26.1 41.7c-.3 2.4.6 4.4 2.3 5.6M37.9 41.7c.3 2.4-.6 4.4-2.3 5.6\" stroke=\"#151313\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M29 45.2q3-2.6 6 0\" stroke=\"#6b3220\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M28.6 47c1.1 2 2 3 3.4 3s2.3-1 3.4-3c-2 1-4.8 1-6.8 0z\" fill=\"#151313\"/></svg>","yasmin":"<svg viewBox=\"0 0 64 64\" aria-hidden=\"true\"><path d=\"M14 31C13 15 22 9 32 9s19 6 18 22l2 33H12z\" fill=\"#302018\"/><path d=\"M16 66v-7c1-6 7-9 11-9l5 4 5-4c6 0 11 5 12 9v7z\" fill=\"#8b4562\"/><path d=\"M25.5 44h13v22h-13z\" fill=\"#c99a79\"/><path d=\"M25.5 46c2.4 2 10.6 2 13 0v3c-3 1.8-10 1.8-13 0z\" fill=\"#b88566\"/><ellipse cx=\"32\" cy=\"31\" rx=\"14\" ry=\"16.5\" fill=\"#d9ac8c\"/><path d=\"M18 31C16.6 17 25 12 33 12c9 0 14.4 6 13.6 17.6-2.6-6-6.6-9.8-12.8-10.8-3 4-9.6 8-15.8 12.2z\" fill=\"#3b261f\"/><path d=\"M18.2 28.5c-2 10-1.2 25 3 36H13.8c-3.4-11-1-26.6 4.4-36zM46.2 27.6c2 10.4 1.2 26.6-3 36.4h7.4c3.4-11.2.6-28-4.4-36.4z\" fill=\"#3b261f\"/><path d=\"M23.4 27.6q3.4-.6 6.6-2.4M34.2 25.2q3.2 1.8 6.6 2.4\" stroke=\"#302018\" stroke-width=\"1.7\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"26.6\" cy=\"31.6\" rx=\"1.8\" ry=\"2.2\" fill=\"#3b2a20\"/><ellipse cx=\"37.4\" cy=\"31.6\" rx=\"1.8\" ry=\"2.2\" fill=\"#3b2a20\"/><path d=\"M24.4 29.6l-1.2-1M39.6 29.6l1.2-1\" stroke=\"#3b2a20\" stroke-width=\"1.1\" stroke-linecap=\"round\"/><circle cx=\"23.6\" cy=\"37\" r=\"2.4\" fill=\"#f2a29a\" opacity=\".45\"/><circle cx=\"40.4\" cy=\"37\" r=\"2.4\" fill=\"#f2a29a\" opacity=\".45\"/><path d=\"M32 33q-1.6 3.4.4 4.2\" stroke=\"#b88162\" stroke-width=\"1.3\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M28.8 43.4q3.2-2.8 6.4 0\" stroke=\"#d0686a\" stroke-width=\"1.9\" fill=\"none\" stroke-linecap=\"round\"/></svg>"};
+const PESSOAS=Object.freeze({
+  'lucas.souza.sobral54@gmail.com':Object.freeze({nome:'Lucas',avatar:'lucas',cor:'#3b82f6'}),
+  'yasmincunha74@gmail.com':Object.freeze({nome:'Yasmin',avatar:'yasmin',cor:'#ec4899'})
+});
+const normalizarEmail=email=>String(email||'').trim().toLowerCase();
+const pessoaDe=email=>Object.prototype.hasOwnProperty.call(PESSOAS,normalizarEmail(email))?PESSOAS[normalizarEmail(email)]:null;
+const emailPermitido=email=>!!pessoaDe(email);
 const TABS=['g-geral','g-mov','g-plan','g-obj'];
 
 /* ================= utilidades ================= */
@@ -140,11 +147,12 @@ const plural=(n,s,p)=>n+' '+(n===1?s:p);
 
 /* ================= estado ================= */
 const CFG=window.CAIXA_CONFIG||{};
+const PREF_LY="c360-ly:"+location.pathname+":";
 let sb=null,canal=null,timer=null,gerando=false,instalarEvt=null;
-const S={fTag:'',ultima:{},mes:MES_ATUAL,ano:ANO_ATUAL,view:'geral',itens:[],movMetas:[],metas:[],contas:[],limites:{},mesadas:{},nomes:{},me:'',uid:'',workspace:'',contexto:null,
-  ordDes:(()=>{try{return localStorage.getItem('pf-ord-des')||'prioridade'}catch(e){return 'prioridade'}})(),fCat:'',fOrd:(()=>{try{return localStorage.getItem('pf-ord')||'recente'}catch(e){return 'recente'}})(),fBusca:'',temV2:true,temV4:true,saldoInicial:0,movCaixa:0,base:[],cartoes:[],recorrentes:[],dividas:[],desejos:[],orc:{},
+const S={fTag:'',ultima:{},mes:MES_ATUAL,ano:ANO_ATUAL,view:'geral',itens:[],movMetas:[],metas:[],contas:[],limites:{},mesadas:{},nomes:{},me:'',uid:'',workspace:'',
+  ordDes:(()=>{try{return localStorage.getItem(PREF_LY+'pf-ord-des')||'prioridade'}catch(e){return 'prioridade'}})(),fCat:'',fOrd:(()=>{try{return localStorage.getItem(PREF_LY+'pf-ord')||'recente'}catch(e){return 'recente'}})(),fBusca:'',temV2:true,temV4:true,saldoInicial:0,movCaixa:0,base:[],cartoes:[],recorrentes:[],dividas:[],desejos:[],orc:{},
   pagPrev:{},temV12:false,patrIni:'',temPatr:false,rendaMedia:0,temRenda:false,fut:[],card:[],fech:{},ccF:{cartao:'',mes:MES_ATUAL.slice(5,7),ano:MES_ATUAL.slice(0,4)},pagDiv:[],invest:[],temV5:true,invAtivo:null,retro:{},calDia:null,abaDesejos:'aberto',sim:{nome:'',valor:'',forma:'vista',n:10},priv:false};
-try{S.priv=localStorage.getItem('pf-priv')==='1'}catch(e){}
+try{S.priv=localStorage.getItem(PREF_LY+'pf-priv')==='1'}catch(e){}
 
 /* Banco do geral: toda consulta e gravação carrega o workspace da sessão. */
 function workspaceAtual(){if(!S.workspace)throw new Error('Entre novamente para carregar seu espaço financeiro.');return S.workspace}
@@ -282,7 +290,7 @@ async function recarregar(){
   })().finally(()=>{cargaAtual=null});
   return cargaAtual;
 }
-function agendar(){clearTimeout(timer);if(!$('setup').hidden)return;timer=setTimeout(()=>{if((S._orcEditando||0)>0||(S._orcPend||0)>0)return agendar();recarregar()},350)}
+function agendar(){clearTimeout(timer);timer=setTimeout(()=>{if((S._orcEditando||0)>0||(S._orcPend||0)>0)return agendar();recarregar()},350)}
 setInterval(()=>{if(S.me&&!document.hidden){const d=new Date(),hoje=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;if(hoje!==HOJE)agendar()}},60000);
 function assinar(){
   if(canal)return;
@@ -379,7 +387,7 @@ function statusConta(r,m){
   if(d<=5)return {k:'soon',txt:(r.tipo==='entrada'?'Prevista ':'Vence ')+(d===1?'amanhã':`em ${d} dias`),venc,oc};
   return {k:'idle',txt:(r.tipo==='entrada'?'Prevista dia ':'Vence dia ')+Math.min(r.dia,ultimoDia(m)),venc,oc};
 }
-function avatarDe(email,triste){const n=String(S.nomes[email]||email||'').trim().split(/\s+/)[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return (triste?AVATARES_TRISTES:AVATARES)[n]||''}
+function avatarDe(email,triste){const pessoa=pessoaDe(email);return pessoa?(triste?AVATARES_TRISTES:AVATARES)[pessoa.avatar]:''}
 /* selinho dos bonequinhos: verde com joinha quando o saldo é positivo, vermelho e tristes quando é negativo */
 function selo(v,opt={}){
   if(!isFinite(v)||Math.abs(v)<0.005)return '';
@@ -389,8 +397,7 @@ function selo(v,opt={}){
   return `<span class="selo ${bom?'bom':'ruim'}${opt.inl?' inl':''}" title="${txt}" aria-label="${txt}">${rostos}<i class="sl-mao" aria-hidden="true">${bom?'👍':'👎'}</i></span>`;
 }
 /* dono da conta/compra: azul-escuro para o Enzo, rosa para a Mariana */
-const CORES_DONO={enzo:'#1e3a8a',mariana:'#ec4899'};
-function corDono(email){const n=String(S.nomes[email]||email||'').trim().split(/\s+/)[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return CORES_DONO[n]||'#b8860b'}
+function corDono(email){return pessoaDe(email)?.cor||'#b8860b'}
 function donoBadge(email){if(!email)return '';const nome=S.nomes[email]||email.split('@')[0];return `<span class="dono-b" style="--dc:${corDono(email)}"><i>${avatarDe(email)||esc(nome.charAt(0))}</i>${esc(nome.split(' ')[0])}</span>`}
 function nomeDe(email){if(!email)return '';if(email===S.me)return 'Você';return S.nomes[email]||email.split('@')[0]}
 function ehLivre(i){return !!(i.livre||i.categoria==='livre')}
@@ -1795,8 +1802,8 @@ function render(animarMovimento=false,reutilizar=false){
   const b=$('fBusca'),c=$('fCat');
   if(b)b.addEventListener('input',()=>{S.fBusca=b.value;clearTimeout(b._t);b._t=setTimeout(()=>{const pos=b.selectionStart;render();const nb=$('fBusca');nb.focus();nb.setSelectionRange(pos,pos)},250)});
   if(c)c.addEventListener('change',()=>{S.fCat=c.value;render()});
-  const dO=$('dOrd');if(dO)dO.addEventListener('change',()=>{S.ordDes=dO.value;try{localStorage.setItem('pf-ord-des',dO.value)}catch(e){}render()});
-  const fo=$('fOrd');if(fo)fo.addEventListener('change',()=>{S.fOrd=fo.value;try{localStorage.setItem('pf-ord',fo.value)}catch(e){}render()});
+  const dO=$('dOrd');if(dO)dO.addEventListener('change',()=>{S.ordDes=dO.value;try{localStorage.setItem(PREF_LY+'pf-ord-des',dO.value)}catch(e){}render()});
+  const fo=$('fOrd');if(fo)fo.addEventListener('change',()=>{S.fOrd=fo.value;try{localStorage.setItem(PREF_LY+'pf-ord',fo.value)}catch(e){}render()});
   const ft=$('fTag');if(ft)ft.addEventListener('change',()=>{S.fTag=ft.value;render()});
   ['ccCartao','ccMes','ccAno'].forEach((id,i)=>{const el=$(id);if(el)el.addEventListener('change',()=>{S.ccF[['cartao','mes','ano'][i]]=el.value;render()})});
   if($('simValor')){
@@ -2817,7 +2824,7 @@ function modalMais(){
   modal(`<h2>Menu</h2>${GRUPOS.map(g=>`<div class="mais-g"><div class="side-title">${esc(g.nome)}</div><div class="mais">${g.views.map(id=>{const v=VIEWS.find(x=>x.id===id);return `<button data-go="${id}" ${S.view===id?'aria-current="page"':''}>${svg(id==='geral'?'geral':id==='reserva'?'metas':id==='contas'?'contas':id)}${esc(v.nome)}</button>`}).join('')}</div></div>`).join('')}
     <div class="side-title">Ferramentas</div>
     <div class="mais"><button data-act="priv">${svg(S.priv?'olhoF':'olho')}${S.priv?'Mostrar valores':'Esconder valores'}</button><button data-act="exportar">${svg('baixar')}Exportar</button>${standalone()?'':`<button data-act="instalar">${svg('instalar')}Instalar app</button>`}
-    <button data-act="compartilhar">${svg('nosso')}Compartilhar dashboard</button><button data-act="seguranca">${svg('escudo')}Segurança</button><button data-act="ajustar-caixa">💵 Ajustar saldo</button><button data-act="sair">${svg('sair')}Sair</button></div>
+    <button data-act="seguranca">${svg('escudo')}Segurança</button><button data-act="ajustar-caixa">💵 Ajustar saldo</button><button data-act="sair">${svg('sair')}Sair</button></div>
     <div class="btns"><button class="btn ghost" data-m="cancelar">Fechar</button></div>`);
 }
 function modalExportar(){
@@ -2864,8 +2871,10 @@ function instalar(){
     :`<p>No <b>Android</b>, abra no Chrome, toque no menu <b>⋮</b> e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p><p>No <b>computador</b>, no Chrome ou no Edge, clique no ícone de instalar que aparece no canto direito da barra de endereço.</p>`);
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instalarEvt=e});
-const VERSAO='34 Geral';
+const VERSAO='35 · Lucas e Yasmin';
 if($('verLogin'))$('verLogin').textContent='Versão '+VERSAO;
+if($('avLucas'))$('avLucas').innerHTML=AVATARES.lucas;
+if($('avYasmin'))$('avYasmin').innerHTML=AVATARES.yasmin;
 /* atualização automática: quando sai uma versão nova, o site se recarrega sozinho (espera fechar a janela aberta, se houver) */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
   const tinhaControle=!!navigator.serviceWorker.controller;
@@ -2955,7 +2964,6 @@ document.addEventListener('click',async e=>{
     case 'inv-apagar':{const x=S.invest.find(i=>i.id===id);if(!x)break;const movs=S.itens.filter(i=>i.investimento_id===x.id).length;
       confirmar('Excluir investimento?',`${esc(x.produto||x.nome||(INVT[x.tipo]||{nome:''}).nome)} sai da carteira e <b>todos os aportes e resgates dele também são desfeitos</b>: o caixa, o patrimônio, o calendário e os relatórios são recalculados como se ele nunca tivesse existido.${movs?'':' (Investimentos cadastrados como "já tínhamos" não mexem no caixa.)'} Se o dinheiro voltou de verdade para a conta, usem Resgatar em vez de excluir.`,'Excluir e desfazer',
         async()=>{await transacao([op('lancamentos','delete',{}, {investimento_id:x.id}),op('investimentos','delete',{}, {id:x.id,valor:x.valor,aplicado:x.aplicado},1)]);toast('Investimento e aportes excluídos')})}break;
-    case 'compartilhar':await modalCompartilhar();break;
     case 'seguranca':await modalSeguranca();break;
     case 'mfa-ativar':await iniciarEnroll();break;
     case 'mfa-desativar':confirmar('Desativar a verificação em 2 etapas?','A conta volta a entrar só com a senha (ou o Google). Seus dados ficam menos protegidos.','Desativar',async()=>{const f=await fatorTotp();if(!f)return 'Nada para desativar.';const {error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error)return erroPT(error);toast('Verificação em 2 etapas desativada')});break;
@@ -3010,7 +3018,7 @@ document.addEventListener('click',async e=>{
     case 'reserva-excluir':{const m=S.metas.find(x=>x.reserva);if(!m)break;const g=guardadoMeta(m.id);modalExcluirReserva(m,g)}break;
     case 'mesadas':modalMesadas();break;
     case 'ajustar-caixa':modalCaixa();break;
-    case 'priv':S.priv=!S.priv;try{localStorage.setItem('pf-priv',S.priv?'1':'0')}catch(x){}navHTML();if(S.view==='orcamento')render();if($('dlg').open)modalMais();break;
+    case 'priv':S.priv=!S.priv;try{localStorage.setItem(PREF_LY+'pf-priv',S.priv?'1':'0')}catch(x){}navHTML();if(S.view==='orcamento')render();if($('dlg').open)modalMais();break;
     case 'mais':modalMais();break;
     case 'ir-retro':S.ano=hojeD.getMonth()===0?ANO_ATUAL-1:ANO_ATUAL;ir('retro');break;
     case 'exportar':modalExportar();break;
@@ -3023,115 +3031,26 @@ document.addEventListener('click',async e=>{
 });
 window.addEventListener('hashchange',()=>{let v=location.hash.slice(1);v=ALIAS[v]||v;if(VIEWS.some(x=>x.id===v)&&v!==S.view){if(v==='cartoes')definirMesHistoricoCartoes();S.view=v;S.ultima[grupoDe(v).id]=v;render()}});
 
-/* ================= configuração e compartilhamento ================= */
-const UUID_CONVITE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/* ================= login ================= */
 function limparDadosEspaco(){
   for(const k of ['itens','movMetas','metas','contas','base','cartoes','recorrentes','dividas','desejos','fut','card','cardTodos','pagDiv','invest'])S[k]=[];
   for(const k of ['limites','mesadas','nomes','orc','pagPrev','fech','_orcSalvo','_orcPorMes'])S[k]={};
   S.hist=null;S._histC=false;S._histV=(S._histV||0)+1;S.retro={};S._retroC={};S._retroV=(S._retroV||0)+1;
   S.saldoInicial=0;S.movCaixa=0;S.rendaMedia=0;S.patrIni='';S._movCarregado=false;S._ultimaAssMov=undefined;pedidosPendentes.clear();
+  if($('view')){$('view')._htmlFonte=null;$('view')._renderChave='';}
 }
-function deveMostrarConfiguracao(c){return c?.admin===true&&c.onboarding_concluido===false}
-function lembrarConviteDaURL(){
-  const id=new URLSearchParams(location.search).get('convite');if(!UUID_CONVITE.test(id||''))return;
-  try{sessionStorage.setItem('c360-convite:'+URL_SITE,id)}catch(e){}S.conviteURL=id;
+function recusarConta(){
+  geracaoAuth++;entrando=false;uidEntrando='';
+  clearTimeout(timer);if(canal){sb.removeChannel(canal);canal=null}
+  limparDadosEspaco();S.me='';S.uid='';S.workspace='';$('view').innerHTML='';
+  telaLogin('Esta edição é exclusiva de Lucas e Yasmin. Saia e entre com uma das duas contas autorizadas.',true);$('lSair').hidden=false;
 }
-function convitePendente(){if(S.conviteURL)return S.conviteURL;try{return sessionStorage.getItem('c360-convite:'+URL_SITE)||''}catch(e){return ''}}
-function esquecerConvite(){S.conviteURL='';try{sessionStorage.removeItem('c360-convite:'+URL_SITE)}catch(e){}
-  const url=new URL(location.href);url.searchParams.delete('convite');history.replaceState(null,'',url.pathname+url.search+url.hash);
-}
-function urlRetornoConta(){const id=convitePendente();return URL_SITE+(UUID_CONVITE.test(id)?'?convite='+encodeURIComponent(id):'')}
-function linkConvite(id){if(!UUID_CONVITE.test(id))throw new Error('Convite inválido.');return URL_SITE+'?convite='+encodeURIComponent(id)}
-async function obterContexto(){
-  const {data,error}=await sb.rpc('controle360_contexto');if(error)throw new Error('Não deu para carregar a configuração. Execute schema-v14-casal.sql no Supabase e tente novamente. '+(error.message||''));
-  if(!data?.id||typeof data.onboarding_concluido!=='boolean')throw new Error('A configuração do espaço não retornou corretamente. Tente novamente.');return data;
-}
-function mostrarConfiguracao(perfil,c,editar=false){
-  fechar();if(canal){sb.removeChannel(canal);canal=null}clearTimeout(timer);
-  $('app').hidden=true;$('login').hidden=true;$('setup').hidden=false;S.configEditando=editar;
-  $('setupTitle').textContent=editar?'Configurar espaço financeiro':c.convites?.length?'Seu convite está aqui':'Configure seu Controle 360';
-  $('setupIntro').textContent=editar?'Atualize o nome e o modo de uso do espaço.':c.convites?.length?'Você pode aceitar um convite para compartilhar um dashboard ou manter seu próprio espaço.':'Escolha como usar seu espaço financeiro. Seus dados já cadastrados serão preservados.';
-  $('setupEmail').textContent='Conta: '+S.me;$('setupError').textContent='';
-  $('setupName').value=perfil.nome||S.nomes[S.me]||S.me.split('@')[0];$('setupWorkspace').value=c.nome||'';
-  $('setupForm').querySelectorAll('[name="setupType"]').forEach(r=>r.checked=r.value===c.tipo);
-  $('setupIncome').value='';$('setupBalance').value='';$('setupValues').hidden=editar;
-  $('setupForm').hidden=!c.admin||(!editar&&c.onboarding_concluido&&!deveMostrarConfiguracao(c));
-  $('setupSave').textContent=editar?'Salvar configuração':'Começar meu dashboard';
-  $('setupBack').hidden=!editar;
-  const convites=c.convites||[],idURL=convitePendente();
-  $('setupInvites').innerHTML=convites.map(i=>`<article class="share-row"><div><b>${esc(i.nome)}</b><p class="mut">Aceitar dá acesso ao planejamento compartilhado. Os dados do seu espaço anterior ficam separados e serão preservados.</p></div><button class="btn" type="button" data-aceitar-convite="${esc(i.id)}">Aceitar e compartilhar dashboard</button></article>`).join('')+
-    (idURL&&!convites.some(i=>i.id===idURL)?'<p class="erro">Este link não corresponde a um convite pendente para esta conta. Confira se entrou com o e-mail convidado. Convites cancelados ou expirados não podem ser aceitos.</p>':'')+
-    (c.onboarding_concluido||!c.admin?'<button class="btn ghost" type="button" id="setupContinue">Continuar no meu dashboard</button>':'');
-  const voltar=()=>{esquecerConvite();S.ignorarConvites=true;retomarSessao().catch(e=>$('setupError').textContent=erroPT(e))};
-  $('setupInvites').querySelector('#setupContinue')?.addEventListener('click',voltar);
-  $('setupInvites').querySelectorAll('[data-aceitar-convite]').forEach(b=>b.addEventListener('click',async()=>{
-    if(b.disabled)return;b.disabled=true;const uid=S.uid;
-    try{const {error}=await sb.rpc('controle360_aceitar_convite',{p_convite:b.dataset.aceitarConvite});if(error)throw error;if(uid!==S.uid)return;
-      esquecerConvite();S.ignorarConvites=true;await retomarSessao();toast('Convite aceito. Vocês compartilham este dashboard.');
-    }catch(e){$('setupError').textContent=erroPT(e)}finally{b.disabled=false}
-  }));
-  $('setupTitle').setAttribute('tabindex','-1');$('setupTitle').focus();
-}
-async function retomarSessao(){if(cargaAtual)await cargaAtual;const {data,error}=await sb.auth.getSession();if(error||!data?.session)throw error||new Error('Entre novamente.');await aposLogin(data.session)}
-async function salvarConfiguracao(){
-  const b=$('setupSave');if(b.disabled)return;
-  const nome=$('setupName').value.trim(),espaco=$('setupWorkspace').value.trim();
-  const tipo=$('setupForm').querySelector('[name="setupType"]:checked')?.value;
-  const renda=$('setupIncome').value.trim(),saldo=$('setupBalance').value.trim(),income=renda?parseLivre(renda):null,balance=saldo?parseLivre(saldo):null;
-  if(!nome||nome.length>80||!espaco||espaco.length>80)return $('setupError').textContent='Preencha os nomes com até 80 caracteres.';
-  if(!['individual','familia'].includes(tipo))return $('setupError').textContent='Escolha o modo de uso.';
-  if(!S.configEditando&&((renda&&(income===null||income<0))||(saldo&&balance===null)))return $('setupError').textContent='Confira os valores opcionais. Use, por exemplo, 1.500,00.';
-  b.disabled=true;$('setupError').textContent='';const uid=S.uid;
-  try{
-    const {error}=await sb.rpc(S.configEditando?'controle360_configurar_espaco':'complete_onboarding',S.configEditando?
-      {p_nome:espaco,p_tipo:tipo,p_display_name:nome}:{p_workspace_name:espaco,p_workspace_type:tipo,p_display_name:nome,p_income:income,p_start_balance:balance});
-    if(error)throw error;if(uid!==S.uid)return;
-    S.ignorarConvites=true;esquecerConvite();await retomarSessao();if(!$('app').hidden&&tipo==='familia')await modalCompartilhar();
-  }catch(e){$('setupError').textContent=erroPT(e)}finally{b.disabled=false}
-}
-$('setupForm').addEventListener('submit',e=>{e.preventDefault();salvarConfiguracao()});
-$('setupLogout').addEventListener('click',()=>sair());
-$('setupBack').addEventListener('click',()=>retomarSessao().catch(e=>$('setupError').textContent=erroPT(e)));
-async function modalCompartilhar(){
-  const uid=S.uid,ws=S.workspace,c=await obterContexto();if(uid!==S.uid||ws!==S.workspace)return;S.contexto=c;
-  const [m,i]=await Promise.all([selecionarWorkspace('workspace_members','user_id,role,status'),c.admin?selecionarWorkspace('workspace_invites','id,email,status,expira_em,criado_em').eq('status','pending').order('criado_em',{ascending:false}):Promise.resolve({data:[],error:null})]);
-  if(m.error||i.error)throw m.error||i.error;if(uid!==S.uid||ws!==S.workspace)return;
-  const membros=(m.data||[]).filter(x=>x.status==='active');
-  const perfis=await sb.from('profiles').select('user_id,nome,email').in('user_id',membros.map(x=>x.user_id));if(perfis.error)throw perfis.error;if(uid!==S.uid||ws!==S.workspace)return;
-  const nomes=Object.fromEntries((perfis.data||[]).map(x=>[x.user_id,x]));
-  modal(`<h2>Compartilhar dashboard</h2><p class="mut">${esc(c.nome)} · ${c.tipo==='familia'?'Casal / família':'Individual'}. Cada pessoa usa sua própria conta e compartilha gastos, cartões, orçamento, metas e investimentos deste espaço.</p>
-    ${c.admin?`<button class="btn ghost" type="button" id="shareConfigure">${deveMostrarConfiguracao(c)?'Concluir configuração inicial':'Configurar espaço / mudar para casal'}</button>`:''}
-    <section><h3>Participantes</h3>${membros.map(x=>`<div class="share-row"><div><b>${esc(nomes[x.user_id]?.nome||'Participante')}</b><small class="mut"> ${esc(nomes[x.user_id]?.email||'')} · ${x.role==='owner'?'Proprietário':x.role==='admin'?'Administrador':'Participante'}</small></div>${c.owner&&x.user_id!==uid&&x.role!=='owner'?`<button class="btn sm danger" type="button" data-remover-participante="${esc(x.user_id)}">Remover acesso</button>`:''}</div>`).join('')}</section>
-    ${c.admin&&c.tipo==='familia'&&c.onboarding_concluido?`<section><h3>Convidar parceiro(a)</h3><label>E-mail da pessoa<input class="field" id="shareEmail" type="email" maxlength="254" placeholder="pessoa@exemplo.com"></label><button class="btn" type="button" id="shareCreate">Criar convite</button><p class="mut">O convite vale por 7 dias e só pode ser aceito pela conta com esse e-mail. Você pode copiar o link. O envio por e-mail depende da configuração do serviço.</p></section>`:''}
-    ${c.admin?`<section><h3>Convites pendentes</h3>${(i.data||[]).map(x=>`<div class="share-row"><div><b>${esc(x.email)}</b><small class="mut"> ${Date.parse(x.expira_em)>Date.now()?'Pendente':'Expirado'} · validade: ${esc(new Date(x.expira_em).toLocaleDateString('pt-BR'))}</small></div><input class="field share-link" aria-label="Link de convite para ${esc(x.email)}" value="${esc(linkConvite(x.id))}" readonly><div class="share-actions"><button class="btn sm ghost" type="button" data-copiar-convite="${esc(x.id)}">Copiar link</button><button class="btn sm ghost" type="button" data-enviar-convite="${esc(x.id)}">Enviar por e-mail</button><button class="btn sm danger" type="button" data-cancelar-convite="${esc(x.id)}">Cancelar convite</button></div></div>`).join('')||'<p class="mut">Nenhum convite pendente.</p>'}</section>`:''}
-    <p class="share-status" id="shareStatus" role="status"></p><div class="btns"><button class="btn ghost" data-m="cancelar">Fechar</button></div>`);
-  const avisar=texto=>{if(uid!==S.uid||ws!==S.workspace)return;const status=$('shareStatus');if(status)status.textContent=texto};
-  $('mdl').querySelector('#shareConfigure')?.addEventListener('click',()=>mostrarConfiguracao({nome:S.nomes[S.me]},c,!deveMostrarConfiguracao(c)));
-  $('mdl').querySelector('#shareCreate')?.addEventListener('click',async e=>{
-    const b=e.currentTarget;if(b.disabled)return;const email=val('shareEmail').trim();if(!/^\S+@\S+\.\S+$/.test(email))return avisar('Digite um e-mail válido.');
-    b.disabled=true;try{const {error}=await sb.rpc('controle360_criar_convite',{p_email:email});if(error)throw error;if(uid!==S.uid||ws!==S.workspace||!$('dlg').open||!$('shareStatus'))return;await modalCompartilhar();avisar('Convite criado. Copie o link para compartilhar ou use Enviar por e-mail.')}catch(e){avisar(erroPT(e))}finally{b.disabled=false}
-  });
-  $('mdl').querySelectorAll('[data-copiar-convite]').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(linkConvite(b.dataset.copiarConvite));avisar('Link copiado.')}catch(e){avisar('Selecione o link acima e copie manualmente.')}}));
-  $('mdl').querySelectorAll('[data-enviar-convite]').forEach(b=>b.addEventListener('click',async()=>{
-    if(b.disabled)return;b.disabled=true;
-    try{const {data,error}=await sb.functions.invoke('controle360-convite',{body:{convite:b.dataset.enviarConvite}});if(error||!data?.enviado)throw error||new Error(data?.erro||'Envio indisponível.');
-      avisar('Convite encaminhado ao serviço de e-mail. A pessoa também pode entrar pelo link.');
-    }catch(e){avisar('O e-mail não foi confirmado como enviado. Confira a função controle360-convite e o serviço de e-mail no Supabase. Você pode copiar e compartilhar o link.')}finally{b.disabled=false}
-  }));
-  $('mdl').querySelectorAll('[data-cancelar-convite]').forEach(b=>b.addEventListener('click',async()=>{
-    if(b.disabled)return;b.disabled=true;try{const {error}=await sb.rpc('controle360_cancelar_convite',{p_convite:b.dataset.cancelarConvite});if(error)throw error;if(uid!==S.uid||ws!==S.workspace||!$('dlg').open||!$('shareStatus'))return;await modalCompartilhar();avisar('Convite cancelado.')}catch(e){avisar(erroPT(e))}finally{b.disabled=false}
-  }));
-  $('mdl').querySelectorAll('[data-remover-participante]').forEach(b=>b.addEventListener('click',()=>confirmar('Remover acesso?','A pessoa perderá acesso a este dashboard. Os lançamentos existentes serão preservados.','Remover acesso',async()=>{const {error}=await sb.rpc('controle360_remover_participante',{p_usuario:b.dataset.removerParticipante});if(error)throw error;toast('Acesso removido')})));
-}
-
-/* ================= login ================= */
 const URL_SITE=location.origin+location.pathname;
-lembrarConviteDaURL();
 let recuperando=/type=recovery/.test(location.hash+location.search);
 function msgLogin(t,erro){const m=$('lMsg');m.textContent=t||'';m.classList.toggle('erro-l',!!erro)}
-const MODOS_LOGIN=['lForm','lReset','lNova','lMfa','lCadastro'];
+const MODOS_LOGIN=['lForm','lReset','lNova','lMfa'];
 function modoLogin(m){MODOS_LOGIN.forEach(id=>$(id).hidden=id!==m);msgLogin('')}
-function telaLogin(msg,semForm){$('setup').hidden=true;$('app').hidden=true;$('login').hidden=false;modoLogin(semForm?'':'lForm');if(semForm)MODOS_LOGIN.forEach(id=>$(id).hidden=true);msgLogin(msg||'',!!semForm)}
+function telaLogin(msg,semForm){$('app').hidden=true;$('login').hidden=false;modoLogin(semForm?'':'lForm');if(semForm)MODOS_LOGIN.forEach(id=>$(id).hidden=true);msgLogin(msg||'',!!semForm)}
 function erroPT(e){const m=(e&&e.message)||'';
   if(/invalid totp|totp code|invalid.*(mfa|code)/i.test(m))return 'Código incorreto ou vencido. Use o código atual do aplicativo (ele muda a cada 30 segundos) e confira se a hora do celular está automática.';
   if(/enabled|not.*support/i.test(m)&&/mfa|factor|totp/i.test(m))return 'A verificação em 2 etapas está desligada no Supabase. Ative em Authentication > Multi-Factor.';
@@ -3146,16 +3065,18 @@ function erroPT(e){const m=(e&&e.message)||'';
 async function nivelAAL(){if(!sb.auth.mfa)throw new Error('Verificação de segurança indisponível.');const {data,error}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(error||!data)throw error||new Error('Não deu para verificar a segurança da sessão.');return data}
 async function fatorTotp(){if(!sb.auth.mfa)throw new Error('Verificação em 2 etapas indisponível.');const {data,error}=await sb.auth.mfa.listFactors();if(error)throw error;
   return [...(data?.all||[]),...(data?.totp||[])].find(f=>(f.factor_type||f.type||'totp')==='totp'&&f.status==='verified')||null}
-let entrando=false,geracaoAuth=0;
+let entrando=false,geracaoAuth=0,uidEntrando='';
 async function aposLogin(sessao){
-  if(entrando)return;entrando=true;const geracao=geracaoAuth;
+  if(!emailPermitido(sessao?.user?.email)){recusarConta();return}
+  const uid=sessao.user.id;if(entrando&&uid===uidEntrando)return;if(entrando)geracaoAuth++;
+  entrando=true;uidEntrando=uid;const geracao=geracaoAuth;
   try{const a=await nivelAAL();if(geracao!==geracaoAuth)return;
     if(a&&a.nextLevel==='aal2'&&a.currentLevel!=='aal2'){telaMfa();return}
     await entrar(sessao,geracao)}
-  catch(e){telaLogin('Não deu para concluir o login: '+erroPT(e));}
-  finally{entrando=false}
+  catch(e){if(geracao!==geracaoAuth)return;telaLogin('Não deu para concluir o login: '+erroPT(e));$('lSair').hidden=false;}
+  finally{if(geracao===geracaoAuth){entrando=false;uidEntrando=''}}
 }
-function telaMfa(){$('setup').hidden=true;$('app').hidden=true;$('login').hidden=false;modoLogin('lMfa');$('lSair').hidden=true;$('lCodigo').value='';setTimeout(()=>$('lCodigo').focus(),60)}
+function telaMfa(){$('app').hidden=true;$('login').hidden=false;modoLogin('lMfa');$('lSair').hidden=true;$('lCodigo').value='';setTimeout(()=>$('lCodigo').focus(),60)}
 async function verificarMfa(){
   if($('lVerificar').disabled)return;const code=$('lCodigo').value.trim();
   if(!/^\d{6}$/.test(code))return msgLogin('Digite os 6 números do aplicativo.',true);
@@ -3172,45 +3093,38 @@ $('lCodigo').addEventListener('keydown',e=>{if(e.key==='Enter')verificarMfa()});
 $('lCodigo').addEventListener('input',()=>{if($('lCodigo').value.length===6)verificarMfa()});
 $('lVoltarMfa').addEventListener('click',()=>sair());
 async function entrar(sessao,geracao=geracaoAuth){
-  const workspaceAnterior=S.workspace;S.me=(sessao.user.email||'').toLowerCase();S.uid=sessao.user.id;S.workspace='';
-  const perfilAtual=()=>sb.from('profiles').select('user_id,email,nome,current_workspace_id').eq('user_id',sessao.user.id).maybeSingle();
-  let perfil=await perfilAtual();if(geracao!==geracaoAuth)return;if(perfil.error)throw perfil.error;
-  // Perfis com workspace existente nunca passam pelo bootstrap: ele pode reativar membros removidos.
-  if(!perfil.data?.current_workspace_id){
-    const boot=await sb.rpc('bootstrap_current_user');if(geracao!==geracaoAuth)return;if(boot.error)throw boot.error;
-    perfil=await perfilAtual();if(geracao!==geracaoAuth)return;if(perfil.error)throw perfil.error;
-  }
-  const workspace=perfil.data?.current_workspace_id;if(!workspace)throw new Error('Não foi possível carregar seu espaço financeiro.');
+  if(geracao!==geracaoAuth)return;
+  if(!emailPermitido(sessao?.user?.email)){recusarConta();return}
+  const email=normalizarEmail(sessao.user.email);
+  // Somente o servidor pode associar as contas ao espaço exclusivo.
+  const acesso=await sb.rpc('controle360_ly_entrar');if(geracao!==geracaoAuth)return;
+  if(acesso.error){if(acesso.error.code==='PGRST202'||/function.*(missing|not found)|schema cache/i.test(acesso.error.message||''))throw new Error('Execute schema-lucas-yasmin.sql no Supabase antes de abrir esta edição.');throw acesso.error}
+  const workspace=acesso.data;if(!workspace)throw new Error('Não foi possível carregar o espaço de Lucas e Yasmin.');
   const membros=await sb.from('workspace_members').select('user_id').eq('workspace_id',workspace).eq('status','active');
   if(geracao!==geracaoAuth)return;if(membros.error)throw membros.error;
-  const ids=(membros.data||[]).map(m=>m.user_id);
-  if(!ids.includes(sessao.user.id)){S.workspace='';telaLogin('Sua conta não tem acesso ativo a este espaço financeiro.',true);$('lSair').hidden=false;return}
-  const contexto=await obterContexto();if(geracao!==geracaoAuth)return;
-  if(workspaceAnterior!==workspace)limparDadosEspaco();S.contexto=contexto;S.workspace=workspace;
-  if(deveMostrarConfiguracao(contexto)||(!S.ignorarConvites&&(contexto.convites?.length||convitePendente()))){
-    mostrarConfiguracao(perfil.data,contexto);return;
-  }
-  const {data,error}=await sb.from('profiles').select('user_id,email,nome').in('user_id',ids);
-  if(geracao!==geracaoAuth)return;if(error)throw error;
-  S.workspace=workspace;S.nomes=Object.fromEntries((data||[]).map(m=>[m.email.toLowerCase(),m.nome]));
-  $('whoName').textContent=S.nomes[S.me]||S.me.split('@')[0];if($('ver'))$('ver').textContent='Versão '+VERSAO;$('whoMail').textContent=S.me;
+  if(!(membros.data||[]).some(m=>m.user_id===sessao.user.id)){recusarConta();return}
+  if(S.workspace!==workspace||S.uid!==sessao.user.id)limparDadosEspaco();
+  S.me=email;S.uid=sessao.user.id;S.workspace=workspace;
+  S.nomes=Object.fromEntries(Object.entries(PESSOAS).map(([e,p])=>[e,p.nome]));
+  $('whoName').textContent=pessoaDe(email).nome;if($('ver'))$('ver').textContent='Versão '+VERSAO;$('whoMail').textContent=S.me;
   if(standalone())$('instBtn').hidden=true;
   if(/access_token|type=/.test(location.hash))history.replaceState(null,'',location.pathname);
   let h=location.hash.slice(1);h=ALIAS[h]||h;if(VIEWS.some(v=>v.id===h)){S.view=h;S.ultima[grupoDe(h).id]=h}
   if(!await recarregar()){telaLogin('Não deu para carregar seus dados. Tente entrar novamente.');return}
-  if(geracao!==geracaoAuth)return;$('setup').hidden=true;$('login').hidden=true;$('app').hidden=false;assinar();
+  if(geracao!==geracaoAuth)return;$('login').hidden=true;$('app').hidden=false;assinar();
 }
 $('lGoogle').addEventListener('click',async()=>{
   if($('lGoogle').disabled)return;try{
   $('lGoogle').disabled=true;msgLogin('Abrindo o Google…');
-  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:urlRetornoConta(),queryParams:{prompt:'select_account'}}});
+  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:URL_SITE,queryParams:{prompt:'select_account'}}});
   if(error)throw error;
   }catch(e){$('lGoogle').disabled=false;msgLogin(erroPT(e),true)}
 });
 async function entrarSenha(){
   if($('lEntrar').disabled)return;try{
-  const email=$('lEmail').value.trim(),password=$('lSenha').value;
+  const email=normalizarEmail($('lEmail').value),password=$('lSenha').value;
   if(!/^\S+@\S+\.\S+$/.test(email))return msgLogin('Digite um e-mail válido.',true);
+  if(!emailPermitido(email))return msgLogin('Use a conta do Lucas ou da Yasmin.',true);
   if(!password)return msgLogin('Digite sua senha.',true);
   $('lEntrar').disabled=true;msgLogin('Entrando…');
   const {data,error}=await sb.auth.signInWithPassword({email,password});
@@ -3221,27 +3135,15 @@ async function entrarSenha(){
 }
 $('lEntrar').addEventListener('click',entrarSenha);
 $('lSenha').addEventListener('keydown',e=>{if(e.key==='Enter')entrarSenha()});
-$('lCriarConta').addEventListener('click',()=>{modoLogin('lCadastro');$('lEmailC').value=$('lEmail').value;$('lEmailC').focus()});
-$('lVoltarCadastro').addEventListener('click',()=>modoLogin('lForm'));
-$('lCadastrar').addEventListener('click',async()=>{
-  const b=$('lCadastrar');if(b.disabled)return;
-  const email=$('lEmailC').value.trim(),password=$('lSenhaC').value;
-  if(!/^\S+@\S+\.\S+$/.test(email))return msgLogin('Digite um e-mail válido.',true);
-  if(password.length<8)return msgLogin('Use uma senha de pelo menos 8 caracteres.',true);
-  b.disabled=true;msgLogin('Criando conta…');
-  try{const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:urlRetornoConta()}});if(error)throw error;
-    $('lSenhaC').value='';if(data?.session)await aposLogin(data.session);
-    else msgLogin('Confira seu e-mail para confirmar o cadastro. Se já tem conta, volte ao login. Se a mensagem não chegar, o responsável precisa conferir o serviço de e-mail do Supabase.');
-  }catch(e){msgLogin(erroPT(e),true)}finally{b.disabled=false}
-});
 $('lEsqueci').addEventListener('click',()=>{modoLogin('lReset');$('lEmailR').value=$('lEmail').value;$('lEmailR').focus()});
 $('lVoltar').addEventListener('click',()=>modoLogin('lForm'));
 $('lEnviarR').addEventListener('click',async()=>{
   if($('lEnviarR').disabled)return;try{
-  const email=$('lEmailR').value.trim();
+  const email=normalizarEmail($('lEmailR').value);
   if(!/^\S+@\S+\.\S+$/.test(email))return msgLogin('Digite um e-mail válido.',true);
+  if(!emailPermitido(email))return msgLogin('Use a conta do Lucas ou da Yasmin.',true);
   $('lEnviarR').disabled=true;
-  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:urlRetornoConta()});
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:URL_SITE});
   $('lEnviarR').disabled=false;
   if(error)return msgLogin(erroPT(error),true);
   msgLogin('Pronto! Se esse e-mail tiver acesso, chega um link em instantes. Abra-o neste aparelho para criar a senha.');
@@ -3268,12 +3170,12 @@ $('lSair').addEventListener('click',sair);
   if(!window.supabase||!CFG.url||!CFG.anonKey||CFG.url.includes('COLE_AQUI')){telaLogin('Falta configurar o arquivo config.js com o endereço e a chave do Supabase.',true);return}
   sb=window.supabase.createClient(CFG.url.replace(/\/(rest|auth)\/v1\/?$/,'').replace(/\/$/,''),CFG.anonKey);
   sb.auth.onAuthStateChange((ev,s)=>{
-    if(ev==='PASSWORD_RECOVERY'){$('setup').hidden=true;recuperando=true;$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
-    if(ev==='SIGNED_OUT'){geracaoAuth++;clearTimeout(timer);S.me='';S.uid='';S.workspace='';S.contexto=null;S.ignorarConvites=false;S.itens=[];S.card=[];S.cardTodos=[];S.metas=[];S.movMetas=[];S.cartoes=[];S.recorrentes=[];S.dividas=[];S.pagDiv=[];S.desejos=[];S.invest=[];S.hist=null;S._histV=(S._histV||0)+1;S.retro={};S._retroC={};S._retroV=(S._retroV||0)+1;S.saldoInicial=0;S.movCaixa=0;pedidosPendentes.clear();S._movCarregado=false;S._ultimaAssMov=undefined;if(canal){sb.removeChannel(canal);canal=null}fechar();$('view').innerHTML='';telaLogin();return}
-    if(ev==='SIGNED_IN'&&s&&!recuperando&&$('app').hidden&&$('setup').hidden&&$('lSair').hidden)setTimeout(()=>aposLogin(s),0);
+    if(ev==='PASSWORD_RECOVERY'){if(!emailPermitido(s?.user?.email)){recusarConta();return}recuperando=true;$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
+    if(ev==='SIGNED_OUT'){geracaoAuth++;entrando=false;uidEntrando='';clearTimeout(timer);limparDadosEspaco();S.me='';S.uid='';S.workspace='';if(canal){sb.removeChannel(canal);canal=null}fechar();$('view').innerHTML='';$('lSair').hidden=true;telaLogin();return}
+    if(ev==='SIGNED_IN'&&s&&!recuperando&&(($('app').hidden&&$('lSair').hidden)||(S.uid&&S.uid!==s.user.id)))setTimeout(()=>aposLogin(s),0);
   });
   const {data:{session}}=await sb.auth.getSession();
-  if(recuperando&&session){$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
+  if(recuperando&&session){if(!emailPermitido(session.user?.email)){recusarConta();return}$('app').hidden=true;$('login').hidden=false;modoLogin('lNova');return}
   const erroUrl=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1)).get('error_description');
   if(session)aposLogin(session);else telaLogin(erroUrl?'Não deu para entrar: '+erroUrl.replace(/\+/g,' '):'');
 })().catch(e=>telaLogin('Não deu para iniciar a sessão: '+erroPT(e)));
